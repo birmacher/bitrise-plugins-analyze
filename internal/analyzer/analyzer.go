@@ -35,17 +35,7 @@ func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 
 	fileInfo := FileInfo{
 		RelativePath: relativePath,
-		Size:         info.Size(),
 		Type:         getFileType(info),
-	}
-
-	// Calculate SHA256 for files
-	if !info.IsDir() {
-		shasum, err := calculateSHA256(filePath)
-		if err != nil {
-			return FileInfo{}, fmt.Errorf("failed to calculate SHA256: %v", err)
-		}
-		fileInfo.Shasum = shasum
 	}
 
 	// Recursively process directory contents
@@ -55,6 +45,8 @@ func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 			return FileInfo{}, fmt.Errorf("failed to read directory: %v", err)
 		}
 
+		var totalSize int64
+		var childChecksums []string
 		for _, entry := range entries {
 			childPath := filepath.Join(filePath, entry.Name())
 			childInfo, err := AnalyzeFile(childPath, basePath)
@@ -62,7 +54,27 @@ func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 				return FileInfo{}, err
 			}
 			fileInfo.Children = append(fileInfo.Children, childInfo)
+			totalSize += childInfo.Size
+			childChecksums = append(childChecksums, childInfo.Shasum)
 		}
+		fileInfo.Size = totalSize
+
+		// Calculate directory checksum by combining children's checksums
+		if len(childChecksums) > 0 {
+			hash := sha256.New()
+			for _, checksum := range childChecksums {
+				hash.Write([]byte(checksum))
+			}
+			fileInfo.Shasum = hex.EncodeToString(hash.Sum(nil))
+		}
+	} else {
+		fileInfo.Size = info.Size()
+		// Calculate SHA256 for files
+		shasum, err := calculateSHA256(filePath)
+		if err != nil {
+			return FileInfo{}, fmt.Errorf("failed to calculate SHA256: %v", err)
+		}
+		fileInfo.Shasum = shasum
 	}
 
 	return fileInfo, nil
