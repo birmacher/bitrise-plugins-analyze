@@ -1,6 +1,6 @@
 package main
 
-import "github.com/bitrise-io/bitrise-plugins-analyze/cmd"
+import "github.com/birmacher/bitrise-plugins-analyze/cmd"
 
 func main() {
 	cmd.Execute()

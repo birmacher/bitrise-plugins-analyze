@@ -1,4 +1,4 @@
-module bitrise-app-analyze
+module bitrise-plugins-analyze
 
 go 1.21
 
