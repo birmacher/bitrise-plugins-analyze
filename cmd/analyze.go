@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -12,6 +14,11 @@ var (
 	context string
 	style   string
 )
+
+func isSupportedAppPath(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".app" || ext == ".ipa" || ext == ".xcarchive"
+}
 
 var annotateCmd = &cobra.Command{
 	Use:   "analyze [path]",
@@ -40,6 +47,10 @@ var annotateCmd = &cobra.Command{
 
 		if app_path == "" {
 			return errors.New("app_path is empty")
+		}
+
+		if !isSupportedAppPath(app_path) {
+			return errors.New("unsupported app path format. Supported formats are: .app, .ipa, .xcarchive")
 		}
 
 		// Todo ...
