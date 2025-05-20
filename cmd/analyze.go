@@ -55,7 +55,7 @@ var annotateCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		_, err := analyzeAppBundle(app_path)
+		err := analyzeAppBundle(app_path)
 		if err != nil {
 			return err
 		}

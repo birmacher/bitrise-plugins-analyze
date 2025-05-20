@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"archive/zip"
+	"bitrise-plugins-analyze/internal/analyzer"
 	"fmt"
 	"io"
 	"os"
@@ -9,19 +10,34 @@ import (
 	"strings"
 )
 
-func analyzeAppBundle(app_path string) (string, error) {
-	ext := strings.ToLower(filepath.Ext(app_path))
+func analyzeAppBundle(bundle_path string) error {
+	ext := strings.ToLower(filepath.Ext(bundle_path))
 
+	var app_path string
+	var err error
 	switch ext {
 	case AppExtension:
-		return app_path, nil
+		app_path = bundle_path
 	case IpaExtension:
-		return analyzeIpa(app_path)
+		app_path, err = analyzeIpa(bundle_path)
 	case XcarchiveExtension:
-		return analyzeXcarchive(app_path)
+		app_path, err = analyzeXcarchive(bundle_path)
 	default:
-		return "", fmt.Errorf("unsupported file extension: %s", ext)
+		return fmt.Errorf("unsupported file extension: %s", ext)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	fileInfo, err := analyzer.AnalyzeFile(app_path, "")
+	if err != nil {
+		return fmt.Errorf("failed to analyze file: %v", err)
+	}
+
+	fmt.Println(fileInfo)
+
+	return nil
 }
 
 func analyzeXcarchive(app_path string) (string, error) {
