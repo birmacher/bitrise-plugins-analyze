@@ -10,6 +10,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	AppExtension       = ".app"
+	IpaExtension       = ".ipa"
+	XcarchiveExtension = ".xcarchive"
+)
+
 var (
 	context string
 	style   string
@@ -17,7 +23,7 @@ var (
 
 func isSupportedAppPath(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
-	return ext == ".app" || ext == ".ipa" || ext == ".xcarchive"
+	return ext == AppExtension || ext == IpaExtension || ext == XcarchiveExtension
 }
 
 var annotateCmd = &cobra.Command{
@@ -49,12 +55,7 @@ var annotateCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		if !isSupportedAppPath(app_path) {
-			return errors.New("unsupported app path format. Supported formats are: .app, .ipa, .xcarchive")
-		}
-
-		// Todo ...
-		return nil
+		return analyzeAppBundle(app_path)
 	},
 }
 
