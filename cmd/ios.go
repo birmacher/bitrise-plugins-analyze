@@ -3,6 +3,7 @@ package cmd
 import (
 	"archive/zip"
 	"bitrise-plugins-analyze/internal/analyzer"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,12 +15,18 @@ func analyzeAppBundle(bundle_path string) error {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var app_path string
+	var tempDir string
+	defer func() {
+		if tempDir != "" {
+			os.RemoveAll(tempDir)
+		}
+	}()
 	var err error
 	switch ext {
 	case AppExtension:
 		app_path = bundle_path
 	case IpaExtension:
-		app_path, err = analyzeIpa(bundle_path)
+		app_path, tempDir, err = analyzeIpa(bundle_path)
 	case XcarchiveExtension:
 		app_path, err = analyzeXcarchive(bundle_path)
 	default:
@@ -30,12 +37,16 @@ func analyzeAppBundle(bundle_path string) error {
 		return err
 	}
 
-	fileInfo, err := analyzer.AnalyzeFile(app_path, "")
+	fileInfo, err := analyzer.AnalyzeBaseDirectory(app_path)
 	if err != nil {
 		return fmt.Errorf("failed to analyze file: %v", err)
 	}
 
-	fmt.Println(fileInfo)
+	jsonData, err := json.MarshalIndent(fileInfo, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal file info: %v", err)
+	}
+	fmt.Println(string(jsonData))
 
 	return nil
 }
@@ -45,18 +56,17 @@ func analyzeXcarchive(app_path string) (string, error) {
 	return findAppPath(productsPath)
 }
 
-func analyzeIpa(app_path string) (string, error) {
+func analyzeIpa(app_path string) (string, string, error) {
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "ipa-*")
 	if err != nil {
-		return "", fmt.Errorf("failed to create temp directory: %v", err)
+		return "", "", fmt.Errorf("failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir) // Clean up temp directory when done
 
 	// Open the IPA file
 	reader, err := zip.OpenReader(app_path)
 	if err != nil {
-		return "", fmt.Errorf("failed to open IPA file: %v", err)
+		return "", tempDir, fmt.Errorf("failed to open IPA file: %v", err)
 	}
 	defer reader.Close()
 
@@ -70,24 +80,24 @@ func analyzeIpa(app_path string) (string, error) {
 		}
 
 		if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-			return "", fmt.Errorf("failed to create directory: %v", err)
+			return "", tempDir, fmt.Errorf("failed to create directory: %v", err)
 		}
 
 		dstFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 		if err != nil {
-			return "", fmt.Errorf("failed to create file: %v", err)
+			return "", tempDir, fmt.Errorf("failed to create file: %v", err)
 		}
 
 		srcFile, err := file.Open()
 		if err != nil {
 			dstFile.Close()
-			return "", fmt.Errorf("failed to open zip file: %v", err)
+			return "", tempDir, fmt.Errorf("failed to open zip file: %v", err)
 		}
 
 		if _, err := io.Copy(dstFile, srcFile); err != nil {
 			srcFile.Close()
 			dstFile.Close()
-			return "", fmt.Errorf("failed to extract file: %v", err)
+			return "", tempDir, fmt.Errorf("failed to extract file: %v", err)
 		}
 
 		srcFile.Close()
@@ -96,7 +106,8 @@ func analyzeIpa(app_path string) (string, error) {
 
 	// Find the .app file in Payload directory
 	payloadPath := filepath.Join(tempDir, "Payload")
-	return findAppPath(payloadPath)
+	appPath, err := findAppPath(payloadPath)
+	return appPath, tempDir, err
 }
 
 func findAppPath(directory string) (string, error) {

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -20,11 +18,6 @@ var (
 	context string
 	style   string
 )
-
-func isSupportedAppPath(path string) bool {
-	ext := strings.ToLower(filepath.Ext(path))
-	return ext == AppExtension || ext == IpaExtension || ext == XcarchiveExtension
-}
 
 var annotateCmd = &cobra.Command{
 	Use:   "analyze [path]",

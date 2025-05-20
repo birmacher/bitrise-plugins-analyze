@@ -18,6 +18,10 @@ type FileInfo struct {
 	Children     []FileInfo `json:"children,omitempty"`
 }
 
+func AnalyzeBaseDirectory(directoryPath string) (FileInfo, error) {
+	return AnalyzeFile(directoryPath, directoryPath)
+}
+
 func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 	info, err := os.Stat(filePath)
 	if err != nil {
@@ -69,10 +73,10 @@ func getFileType(info os.FileInfo) string {
 		return "directory"
 	}
 	ext := strings.ToLower(filepath.Ext(info.Name()))
-	switch ext[1:] {
-	case "otf", "ttc", "ttf", "woff":
+	switch ext {
+	case ".otf", ".ttc", ".ttf", ".woff":
 		return "font"
-	case "strings", "xcstrings":
+	case ".strings", ".xcstrings":
 		return "localization"
 	case "car":
 		return "asset"
