@@ -1,9 +1,9 @@
 package platform
 
 import (
-	"bitrise-app-analyze/internal/analyzer"
-	"bitrise-app-analyze/internal/platform/android"
-	"bitrise-app-analyze/internal/platform/ios"
+	"bitrise-plugins-analyze/internal/analyzer"
+	"bitrise-plugins-analyze/internal/platform/android"
+	"bitrise-plugins-analyze/internal/platform/ios"
 )
 
 // NewIOSAnalyzer creates a new iOS analyzer

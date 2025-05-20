@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"bitrise-app-analyze/internal/analyzer"
+	"bitrise-plugins-analyze/internal/analyzer"
 )
 
 // AndroidAnalyzer implements the analyzer.Analyzer interface for Android apps

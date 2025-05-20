@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"bitrise-app-analyze/internal/analyzer"
+	"bitrise-plugins-analyze/internal/analyzer"
 )
 
 // IOSAnalyzer implements the analyzer.Analyzer interface for iOS apps
