@@ -37,13 +37,9 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 		}
 
 		// Analyze .car files if present
-		carFiles, err := FindAndAnalyzeCarFiles(bundlePath)
+		err := FindAndAnalyzeCarFiles(bundlePath, bundle)
 		if err != nil {
-			// Log the error but don't fail the analysis
-			// Some bundles might not have .car files
-			bundle.CarFiles = []CarFileInfo{}
-		} else {
-			bundle.CarFiles = carFiles
+			return nil, err
 		}
 	}
 

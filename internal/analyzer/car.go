@@ -99,9 +99,7 @@ func ParseCARFile(path string) (*CarFileInfo, error) {
 }
 
 // FindAndAnalyzeCarFiles searches for and analyzes all .car files in the bundle
-func FindAndAnalyzeCarFiles(bundlePath string) ([]CarFileInfo, error) {
-	var carFiles []CarFileInfo
-
+func FindAndAnalyzeCarFiles(bundlePath string, bundle *AppBundle) error {
 	err := filepath.Walk(bundlePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -112,15 +110,15 @@ func FindAndAnalyzeCarFiles(bundlePath string) ([]CarFileInfo, error) {
 			if err != nil {
 				return fmt.Errorf("failed to analyze %s: %v", path, err)
 			}
-			carFiles = append(carFiles, *carInfo)
+			bundle.CarFiles = append(bundle.CarFiles, *carInfo)
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to walk bundle directory: %v", err)
+		return fmt.Errorf("failed to walk bundle directory: %v", err)
 	}
 
-	return carFiles, nil
+	return nil
 }
