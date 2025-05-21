@@ -12,6 +12,7 @@ type AppBundle struct {
 	MinimumOSVersion   string        `json:"minimum_os_version"`
 	Files              FileInfo      `json:"files"`
 	CarFiles           []CarFileInfo `json:"car_files,omitempty"`
+	MachOFiles         []MachOInfo   `json:"mach_o_files,omitempty"`
 }
 
 // AnalyzeAppBundle analyzes the provided app bundle directory and returns the analysis results
@@ -38,6 +39,12 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 
 		// Analyze .car files if present
 		err := FindAndAnalyzeCarFiles(bundlePath, bundle)
+		if err != nil {
+			return nil, err
+		}
+
+		// Analyze Mach-O binaries
+		err = FindAndAnalyzeMachO(bundlePath, bundle)
 		if err != nil {
 			return nil, err
 		}
