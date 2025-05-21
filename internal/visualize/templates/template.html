@@ -286,81 +286,24 @@
 
     <div class="section-header">
       <h2 class="section-title">
-        <span class="section-icon">📄</span>
-        Largest Files
-      </h2>
-    </div>
-    <ul class="breakdown-list" id="largestFiles">
-      <li class="file-item">
-        <div class="item-info">
-          <div class="item-name">Assets.car</div>
-          <div class="item-path">MyApp.app/</div>
-        </div>
-        <div class="item-size">
-          <span class="size-number">24.5 MB</span>
-          <span class="size-percentage">15.2%</span>
-        </div>
-      </li>
-      <li class="file-item">
-        <div class="item-info">
-          <div class="item-name">MyApp</div>
-          <div class="item-path">MyApp.app/</div>
-        </div>
-        <div class="item-size">
-          <span class="size-number">18.3 MB</span>
-          <span class="size-percentage">11.4%</span>
-        </div>
-      </li>
-      <li class="file-item">
-        <div class="item-info">
-          <div class="item-name">ImageClassifier.mlmodel</div>
-          <div class="item-path">MyApp.app/Models/</div>
-        </div>
-        <div class="item-size">
-          <span class="size-number">12.8 MB</span>
-          <span class="size-percentage">8.0%</span>
-        </div>
-      </li>
-    </ul>
-
-    <div class="section-header">
-      <h2 class="section-title">
         <span class="section-icon">📦</span>
         Largest Modules
       </h2>
       <p class="section-description">All modules we detected in your app, sorted by install size.</p>
     </div>
     <ul class="breakdown-list" id="largestModules">
-      <li class="module-item">
-        <div class="item-info">
-          <div class="item-name">Frameworks</div>
-          <div class="item-path">MyApp.app/ • 156 files</div>
-        </div>
-        <div class="item-size">
-          <span class="size-number">45.2 MB</span>
-          <span class="size-percentage">28.1%</span>
-        </div>
-      </li>
-      <li class="module-item">
-        <div class="item-info">
-          <div class="item-name">Resources</div>
-          <div class="item-path">MyApp.app/ • 89 files</div>
-        </div>
-        <div class="item-size">
-          <span class="size-number">32.7 MB</span>
-          <span class="size-percentage">20.3%</span>
-        </div>
-      </li>
-      <li class="module-item">
-        <div class="item-info">
-          <div class="item-name">Models</div>
-          <div class="item-path">MyApp.app/ • 12 files</div>
-        </div>
-        <div class="item-size">
-          <span class="size-number">15.4 MB</span>
-          <span class="size-percentage">9.6%</span>
-        </div>
-      </li>
+      <!-- Will be populated by JavaScript -->
+    </ul>
+
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">📄</span>
+        Largest Files
+      </h2>
+      <p class="section-description">All files we detected in your app, sorted by install size.</p>
+    </div>
+    <ul class="breakdown-list" id="largestFiles">
+      <!-- Will be populated by JavaScript -->
     </ul>
   </div>
 
@@ -615,22 +558,21 @@ function updateLargestFiles() {
 
 // Update largest modules list
 function updateLargestModules() {
-  const modules = new Map();
+  const modules = [];
   
   function processNode(node) {
-    if (node.children) {
-      if (node.size > 1024 * 1024) {
-        modules.set(node.relative_path, node);
-      }
+    if (node.children && node.children.length > 0) {
+      // Only include directories that have children
+      modules.push(node);
       node.children.forEach(processNode);
     }
   }
   
   processNode(fileTree);
   
-  const sortedModules = Array.from(modules.values())
+  const sortedModules = modules
     .sort((a, b) => b.size - a.size)
-    .slice(0, 10);
+    .slice(1, 11);
   
   const modulesList = document.getElementById('largestModules');
   modulesList.innerHTML = '';
