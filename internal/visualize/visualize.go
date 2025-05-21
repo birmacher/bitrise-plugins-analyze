@@ -17,6 +17,17 @@ func Visualize(bundle *analyzer.AppBundle) error {
 	fmt.Printf("Download Size: %.2f MB\n", float64(bundle.DownloadSize)/(1024*1024))
 	fmt.Printf("Install Size: %.2f MB\n\n", float64(bundle.InstallSize)/(1024*1024))
 
+	// Show largest files
+	largestFiles := FindLargestFiles(bundle, 10)
+	if len(largestFiles) > 0 {
+		fmt.Println("📦 Largest Files:")
+		for i, file := range largestFiles {
+			fmt.Printf("  %d. %s (%.2f MB)\n", i+1, file.RelativePath, float64(file.Size)/(1024*1024))
+			fmt.Printf("    - Type: %s\n", file.Type)
+		}
+		fmt.Println()
+	}
+
 	// Show duplicates if requested
 	duplicates, err := FindDuplicates(bundle)
 	if err != nil {
