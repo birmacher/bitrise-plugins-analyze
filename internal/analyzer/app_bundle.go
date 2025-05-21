@@ -22,7 +22,14 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 	}
 
 	bundle.Files = files
+	// Todo: Correctly calculate download and install size
 	bundle.DownloadSize = files.Size
+
+	// Check if this is an iOS app bundle by looking for Info.plist
+	err = AnalyzeInfoPlist(bundlePath, bundle)
+	if err != nil {
+		return nil, err
+	}
 
 	return bundle, nil
 }
