@@ -80,16 +80,33 @@ func getFileType(info os.FileInfo) string {
 	if info.IsDir() {
 		return "directory"
 	}
-	ext := strings.ToLower(filepath.Ext(info.Name()))
+
+	name := strings.ToLower(info.Name())
+	ext := strings.ToLower(filepath.Ext(name))
+
 	switch ext {
+	// Fonts
 	case ".otf", ".ttc", ".ttf", ".woff":
 		return "font"
-	case ".strings", ".xcstrings":
+
+	// Localizations
+	case ".strings", ".xcstrings", ".stringsdict":
 		return "localization"
-	case "car":
-		return "asset"
+
+	// Asset Catalogs
+	case ".car", ".xcassets":
+		return "asset_catalog"
+
+	// Videos
+	case ".mp4", ".mov", ".m4v":
+		return "video"
+
+	// CoreML Models
+	case ".mlmodel", ".mlmodelc":
+		return "coreml_model"
+
 	default:
-		return "file"
+		return "binary"
 	}
 }
 
