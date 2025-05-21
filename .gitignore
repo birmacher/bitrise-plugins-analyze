@@ -27,3 +27,5 @@ go.work
 
 # macOS specific files
 .DS_Store 
+
+/index.html
