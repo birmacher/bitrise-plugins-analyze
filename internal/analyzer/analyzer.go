@@ -18,10 +18,6 @@ type FileInfo struct {
 	Children     []FileInfo `json:"children,omitempty"`
 }
 
-func AnalyzeBaseDirectory(directoryPath string) (FileInfo, error) {
-	return AnalyzeFile(directoryPath, directoryPath)
-}
-
 func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 	info, err := os.Stat(filePath)
 	if err != nil {
