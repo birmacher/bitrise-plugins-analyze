@@ -58,6 +58,109 @@
     .size-info {
       color: #0066cc;
     }
+    .tabs {
+      margin: 0 0 20px 0;
+      border-bottom: 1px solid #e1e1e1;
+      display: flex;
+      gap: 32px;
+      padding: 0 16px;
+    }
+    .tab {
+      padding: 12px 0;
+      color: #666;
+      cursor: pointer;
+      position: relative;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      border: none;
+      background: none;
+      margin: 0;
+    }
+    .tab:hover {
+      color: #000;
+    }
+    .tab.active {
+      color: #0066cc;
+    }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #0066cc;
+      border-radius: 2px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      padding: 20px 0;
+    }
+    .insight-card {
+      background: #f8f8fa;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .insight-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .insight-value {
+      font-size: 24px;
+      font-weight: 500;
+      color: #0066cc;
+    }
+    .insight-description {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+    .breakdown-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .breakdown-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e1e1e1;
+    }
+    .breakdown-item:last-child {
+      border-bottom: none;
+    }
+    .breakdown-type {
+      width: 120px;
+      font-weight: 500;
+    }
+    .breakdown-bar {
+      flex-grow: 1;
+      height: 8px;
+      background: #e1e1e1;
+      border-radius: 4px;
+      margin: 0 16px;
+      overflow: hidden;
+    }
+    .breakdown-bar-fill {
+      height: 100%;
+      background: #0066cc;
+      border-radius: 4px;
+    }
+    .breakdown-size {
+      width: 100px;
+      text-align: right;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -89,7 +192,47 @@
       <span class="info-value size-info" id="installSize">-</span>
     </div>
   </div>
-  <div id="chart"></div>
+  
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="breakdown">Breakdown</button>
+    <button class="tab" data-tab="insights">Insights</button>
+  </div>
+
+  <div id="overview" class="tab-content active">
+    <div id="chart"></div>
+  </div>
+
+  <div id="breakdown" class="tab-content">
+    <ul class="breakdown-list" id="typeBreakdown">
+      <!-- Will be populated by JavaScript -->
+    </ul>
+  </div>
+
+  <div id="insights" class="tab-content">
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-title">Largest File</div>
+        <div class="insight-value" id="largestFile">-</div>
+        <div class="insight-description">The single largest file in the bundle</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-title">Asset Catalog Size</div>
+        <div class="insight-value" id="assetCatalogSize">-</div>
+        <div class="insight-description">Total size of .car files</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-title">Binary Size</div>
+        <div class="insight-value" id="binarySize">-</div>
+        <div class="insight-description">Total size of binary files</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-title">Resource Files</div>
+        <div class="insight-value" id="resourceCount">-</div>
+        <div class="insight-description">Number of resource files</div>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
 const fileTree = {
@@ -376,7 +519,7 @@ function formatSize(bytes) {
 function updateBundleInfo() {
   const totalSize = fileTree.size;
   document.getElementById('downloadSize').textContent = formatSize(totalSize);
-  document.getElementById('installSize').textContent = formatSize(totalSize);  // Using same size for now
+  document.getElementById('installSize').textContent = formatSize(totalSize);
 
   // Find Info.plist in the tree
   function findInfoPlist(node) {
@@ -394,12 +537,100 @@ function updateBundleInfo() {
 
   const infoPlist = findInfoPlist(fileTree);
   if (infoPlist) {
-    // In a real implementation, we would parse the Info.plist file
-    // For now, we'll just show some placeholder data
     document.getElementById('bundleId').textContent = 'com.example.hexacalc';
     document.getElementById('version').textContent = '1.0.0';
   }
 }
+
+// Calculate type breakdown
+function calculateTypeBreakdown(node) {
+  const breakdown = {};
+  
+  function processNode(node) {
+    const type = node.type || 'unknown';
+    breakdown[type] = (breakdown[type] || 0) + node.size;
+    
+    if (node.children) {
+      node.children.forEach(processNode);
+    }
+  }
+  
+  processNode(node);
+  return breakdown;
+}
+
+// Update insights
+function updateInsights() {
+  let largestFile = { size: 0 };
+  let assetCatalogSize = 0;
+  let binarySize = 0;
+  let resourceCount = 0;
+  
+  function processNode(node) {
+    if (node.size > largestFile.size) {
+      largestFile = node;
+    }
+    
+    if (node.type === 'asset_catalog') {
+      assetCatalogSize += node.size;
+    } else if (node.type === 'binary') {
+      binarySize += node.size;
+    }
+    
+    if (!node.children) {
+      resourceCount++;
+    }
+    
+    if (node.children) {
+      node.children.forEach(processNode);
+    }
+  }
+  
+  processNode(fileTree);
+  
+  document.getElementById('largestFile').textContent = formatSize(largestFile.size);
+  document.getElementById('assetCatalogSize').textContent = formatSize(assetCatalogSize);
+  document.getElementById('binarySize').textContent = formatSize(binarySize);
+  document.getElementById('resourceCount').textContent = resourceCount;
+}
+
+// Update type breakdown
+function updateBreakdown() {
+  const breakdown = calculateTypeBreakdown(fileTree);
+  const totalSize = fileTree.size;
+  const breakdownList = document.getElementById('typeBreakdown');
+  breakdownList.innerHTML = '';
+  
+  Object.entries(breakdown)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([type, size]) => {
+      const percentage = (size / totalSize * 100).toFixed(1);
+      const li = document.createElement('li');
+      li.className = 'breakdown-item';
+      li.innerHTML = `
+        <span class="breakdown-type">${type}</span>
+        <div class="breakdown-bar">
+          <div class="breakdown-bar-fill" style="width: ${percentage}%"></div>
+        </div>
+        <span class="breakdown-size">${formatSize(size)}</span>
+      `;
+      breakdownList.appendChild(li);
+    });
+}
+
+// Tab switching functionality
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // Remove active class from all tabs and content
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding content
+    tab.classList.add('active');
+    const contentId = tab.getAttribute('data-tab');
+    document.getElementById(contentId).classList.add('active');
+  });
+});
 
 // Helper function to flatten the tree
 function flatten(node, parentLabel, labels, parents, values, types) {
@@ -464,9 +695,11 @@ const config = {
   responsive: true
 };
 
-// Initialize the visualization
+// Initialize everything
 Plotly.newPlot('chart', data, layout, config);
 updateBundleInfo();
+updateBreakdown();
+updateInsights();
 
 // Add click handler for the chart
 document.getElementById('chart').on('plotly_click', function(data) {
