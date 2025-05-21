@@ -49,11 +49,6 @@ var annotateCmd = &cobra.Command{
 			return err
 		}
 
-		err = visualize.Visualize(bundle)
-		if err != nil {
-			return err
-		}
-
 		err = visualize.GenerateHTML(bundle, "index.html")
 		if err != nil {
 			return err
