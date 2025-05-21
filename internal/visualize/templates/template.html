@@ -490,10 +490,16 @@ function flatten(node, parentLabel, labels, parents, values, types, ids) {
   const label = (parentLabel === null) ? "{{.AppName}}.app" : name;
   const id = (parentLabel === null) ? "{{.AppName}}.app" : node.relative_path;
   
+  // Get all duplicate files
+  const duplicateFiles = new Set();
+  findDuplicates().forEach(group => {
+    group.forEach(file => duplicateFiles.add(file.relative_path));
+  });
+  
   labels.push(label);
   parents.push(parentLabel === null ? "" : parentLabel);
   values.push(node.size);
-  types.push(node.type);
+  types.push(duplicateFiles.has(node.relative_path) ? 'duplicate' : node.type);
   ids.push(id);
   
   if (node.children) {
@@ -511,6 +517,7 @@ const colorMap = {
   directory: "#b0b4ff",
   binary: "#a5d8ff",
   asset_catalog: "#ffe066",
+  duplicate: "#ff3b30",
   "": "#ddd"
 };
 const markerColors = types.map(type => colorMap[type] || "#ddd");
