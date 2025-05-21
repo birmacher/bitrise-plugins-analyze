@@ -20,7 +20,8 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     #chart {
-      width: 900px;
+      width: 100%;
+      max-width: 1160px; /* 1200px container - 2 * 20px padding */
       height: 700px;
       margin: auto;
     }
@@ -681,22 +682,29 @@ const data = [{
   }
 }];
 
-const layout = {
-  margin: { l: 0, r: 0, b: 0, t: 32 },
-  width: 900,
-  height: 700,
-  uniformtext: {
-    minsize: 10
-  }
-};
-
-const config = {
-  displayModeBar: false,
-  responsive: true
-};
-
 // Initialize everything
-Plotly.newPlot('chart', data, layout, config);
+function initChart() {
+  const chartDiv = document.getElementById('chart');
+  const layout = {
+    margin: { l: 0, r: 0, b: 0, t: 32 },
+    width: chartDiv.clientWidth,
+    height: 700,
+    uniformtext: {
+      minsize: 10
+    }
+  };
+
+  const config = {
+    displayModeBar: false,
+    responsive: true
+  };
+
+  Plotly.newPlot('chart', data, layout, config);
+}
+
+// Call initChart initially and on window resize
+initChart();
+window.addEventListener('resize', initChart);
 updateBundleInfo();
 updateBreakdown();
 updateInsights();
