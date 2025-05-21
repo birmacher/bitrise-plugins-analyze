@@ -50,7 +50,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputPath string) error {
 	}
 
 	// Extract app name from the bundle path
-	appName := filepath.Base(bundle.Files.RelativePath)
+	appName := bundle.AppName
 	if filepath.Ext(appName) == ".app" {
 		appName = appName[:len(appName)-4] // Remove .app extension
 	}

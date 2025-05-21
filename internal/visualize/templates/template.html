@@ -464,8 +464,8 @@ document.querySelectorAll('.tab').forEach(tab => {
 // Helper function to flatten the tree
 function flatten(node, parentLabel, labels, parents, values, types, ids) {
   const name = node.relative_path.split('/').pop();
-  const label = (parentLabel === null) ? "MyApp" : name;
-  const id = (parentLabel === null) ? "MyApp" : node.relative_path;
+  const label = (parentLabel === null) ? "{{.AppName}}.app" : name;
+  const id = (parentLabel === null) ? "{{.AppName}}.app" : node.relative_path;
   
   labels.push(label);
   parents.push(parentLabel === null ? "" : parentLabel);

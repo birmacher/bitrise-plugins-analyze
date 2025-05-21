@@ -17,6 +17,7 @@ type AppBundle struct {
 	SupportedPlatforms []string      `json:"supported_platforms"`
 	Version            string        `json:"version"`
 	MinimumOSVersion   string        `json:"minimum_os_version"`
+	AppName            string        `json:"app_name"`
 	Files              FileInfo      `json:"files"`
 	CarFiles           []CarFileInfo `json:"car_files,omitempty"`
 	MachOFiles         []MachOInfo   `json:"mach_o_files,omitempty"`
@@ -32,6 +33,7 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 		return nil, err
 	}
 
+	bundle.AppName = filepath.Base(bundlePath)
 	bundle.Files = files
 
 	// Calculate download size
