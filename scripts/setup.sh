@@ -20,4 +20,5 @@ echo "✅ Setup complete! Binary has been built to the bin/ directory."
 # Run the application
 echo "Running application..."
 
-bin/bitrise-plugins-analyze analyze ./scripts/HexaCalc.ipa
+bin/bitrise-plugins-analyze analyze ./scripts/lightyear.ipa
+# bin/bitrise-plugins-analyze analyze ./scripts/HexaCalc.ipa

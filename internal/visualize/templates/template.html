@@ -462,22 +462,26 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // Helper function to flatten the tree
-function flatten(node, parentLabel, labels, parents, values, types) {
+function flatten(node, parentLabel, labels, parents, values, types, ids) {
   const name = node.relative_path.split('/').pop();
   const label = (parentLabel === null) ? "MyApp" : name;
+  const id = (parentLabel === null) ? "MyApp" : node.relative_path;
+  
   labels.push(label);
   parents.push(parentLabel === null ? "" : parentLabel);
   values.push(node.size);
   types.push(node.type);
+  ids.push(id);
+  
   if (node.children) {
     for (const child of node.children) {
-      flatten(child, label, labels, parents, values, types);
+      flatten(child, id, labels, parents, values, types, ids);
     }
   }
 }
 
-const labels = [], parents = [], values = [], types = [];
-flatten(fileTree, null, labels, parents, values, types);
+const labels = [], parents = [], values = [], types = [], ids = [];
+flatten(fileTree, null, labels, parents, values, types, ids);
 
 // Optional: assign color per type
 const colorMap = {
@@ -491,6 +495,7 @@ const markerColors = types.map(type => colorMap[type] || "#ddd");
 const data = [{
   type: "treemap",
   labels,
+  ids,
   parents,
   values,
   branchvalues: 'total',
