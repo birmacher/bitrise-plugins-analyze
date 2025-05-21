@@ -237,6 +237,18 @@
       font-size: 12px;
       color: #666;
     }
+    .sections-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+      margin-top: 32px;
+    }
+    @media (max-width: 768px) {
+      .sections-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -284,27 +296,33 @@
       <!-- Will be populated by JavaScript -->
     </ul>
 
-    <div class="section-header">
-      <h2 class="section-title">
-        <span class="section-icon">📦</span>
-        Largest Modules
-      </h2>
-      <p class="section-description">All modules we detected in your app, sorted by install size.</p>
-    </div>
-    <ul class="breakdown-list" id="largestModules">
-      <!-- Will be populated by JavaScript -->
-    </ul>
+    <div class="sections-grid">
+      <div>
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">📦</span>
+            Largest Modules
+          </h2>
+          <p class="section-description">All modules we detected in your app, sorted by install size.</p>
+        </div>
+        <ul class="breakdown-list" id="largestModules">
+          <!-- Will be populated by JavaScript -->
+        </ul>
+      </div>
 
-    <div class="section-header">
-      <h2 class="section-title">
-        <span class="section-icon">📄</span>
-        Largest Files
-      </h2>
-      <p class="section-description">All files we detected in your app, sorted by install size.</p>
+      <div>
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="section-icon">📄</span>
+            Largest Files
+          </h2>
+          <p class="section-description">All files we detected in your app, sorted by install size.</p>
+        </div>
+        <ul class="breakdown-list" id="largestFiles">
+          <!-- Will be populated by JavaScript -->
+        </ul>
+      </div>
     </div>
-    <ul class="breakdown-list" id="largestFiles">
-      <!-- Will be populated by JavaScript -->
-    </ul>
   </div>
 
   <div id="insights" class="tab-content">
