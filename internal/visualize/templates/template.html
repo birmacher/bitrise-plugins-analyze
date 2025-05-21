@@ -394,6 +394,26 @@
         <div class="legend-color" style="background: #ff3b30"></div>
         <span class="legend-label">Duplicate</span>
       </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #ff9f0a"></div>
+        <span class="legend-label">Font</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #30d158"></div>
+        <span class="legend-label">Localization</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #64d2ff"></div>
+        <span class="legend-label">Image</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #bf5af2"></div>
+        <span class="legend-label">Video</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #ff453a"></div>
+        <span class="legend-label">CoreML Model</span>
+      </div>
     </div>
     <div id="chart"></div>
   </div>
@@ -560,6 +580,11 @@ const colorMap = {
   binary: "#a5d8ff",
   asset_catalog: "#ffe066",
   duplicate: "#ff3b30",
+  font: "#ff9f0a",
+  localization: "#30d158",
+  image: "#64d2ff",
+  video: "#bf5af2",
+  coreml_model: "#ff453a",
   "": "#ddd"
 };
 const markerColors = types.map(type => colorMap[type] || "#ddd");

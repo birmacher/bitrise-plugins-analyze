@@ -97,6 +97,9 @@ func getFileType(info os.FileInfo) string {
 	case ".car", ".xcassets":
 		return "asset_catalog"
 
+	case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif":
+		return "image"
+
 	// Videos
 	case ".mp4", ".mov", ".m4v":
 		return "video"
