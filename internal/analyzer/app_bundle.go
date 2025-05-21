@@ -1,5 +1,7 @@
 package analyzer
 
+import "strings"
+
 // AppBundle represents an analyzed application bundle
 type AppBundle struct {
 	DownloadSize       int64    `json:"download_size"`
@@ -26,9 +28,11 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 	bundle.DownloadSize = files.Size
 
 	// Check if this is an iOS app bundle by looking for Info.plist
-	err = AnalyzeInfoPlist(bundlePath, bundle)
-	if err != nil {
-		return nil, err
+	if strings.HasSuffix(bundlePath, ".app") {
+		err = AnalyzeInfoPlist(bundlePath, bundle)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return bundle, nil

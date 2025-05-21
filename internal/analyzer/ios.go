@@ -1,25 +1,12 @@
 package analyzer
 
 import (
-	"encoding/xml"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"howett.net/plist"
 )
-
-// plistData represents the structure of an Info.plist file
-type plistData struct {
-	XMLName xml.Name `xml:"plist"`
-	Dict    struct {
-		Key    []string `xml:"key"`
-		String []string `xml:"string"`
-		Array  []struct {
-			String []string `xml:"string"`
-		} `xml:"array"`
-	} `xml:"dict"`
-}
 
 // AnalyzeInfoPlist reads and parses the Info.plist file from the provided path
 // and updates the AppBundle with the extracted information
