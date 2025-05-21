@@ -259,6 +259,81 @@ const templateHTML = `<!DOCTYPE html>
       text-align: right;
       color: #666;
     }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin: 32px 0 16px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f0f3;
+      border-radius: 6px;
+      color: #0066cc;
+    }
+    .section-header {
+      margin: 32px 0 8px;
+      padding: 0 16px;
+    }
+    .section-description {
+      font-size: 13px;
+      color: #666;
+      margin: 0 16px 16px;
+    }
+    .file-item, .module-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e1e1e1;
+      transition: background-color 0.2s;
+    }
+    .file-item:hover, .module-item:hover {
+      background-color: #f8f8fa;
+    }
+    .file-item:last-child, .module-item:last-child {
+      border-bottom: none;
+    }
+    .item-info {
+      flex-grow: 1;
+      min-width: 0;
+    }
+    .item-name {
+      font-weight: 500;
+      color: #1d1d1f;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-path {
+      font-size: 12px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-size {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      margin-left: 16px;
+    }
+    .size-number {
+      font-weight: 500;
+      color: #1d1d1f;
+    }
+    .size-percentage {
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -304,6 +379,85 @@ const templateHTML = `<!DOCTYPE html>
   <div id="breakdown" class="tab-content">
     <ul class="breakdown-list" id="typeBreakdown">
       <!-- Will be populated by JavaScript -->
+    </ul>
+
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">📄</span>
+        Largest Files
+      </h2>
+    </div>
+    <ul class="breakdown-list" id="largestFiles">
+      <li class="file-item">
+        <div class="item-info">
+          <div class="item-name">Assets.car</div>
+          <div class="item-path">MyApp.app/</div>
+        </div>
+        <div class="item-size">
+          <span class="size-number">24.5 MB</span>
+          <span class="size-percentage">15.2%</span>
+        </div>
+      </li>
+      <li class="file-item">
+        <div class="item-info">
+          <div class="item-name">MyApp</div>
+          <div class="item-path">MyApp.app/</div>
+        </div>
+        <div class="item-size">
+          <span class="size-number">18.3 MB</span>
+          <span class="size-percentage">11.4%</span>
+        </div>
+      </li>
+      <li class="file-item">
+        <div class="item-info">
+          <div class="item-name">ImageClassifier.mlmodel</div>
+          <div class="item-path">MyApp.app/Models/</div>
+        </div>
+        <div class="item-size">
+          <span class="size-number">12.8 MB</span>
+          <span class="size-percentage">8.0%</span>
+        </div>
+      </li>
+    </ul>
+
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">📦</span>
+        Largest Modules
+      </h2>
+      <p class="section-description">All modules we detected in your app, sorted by install size.</p>
+    </div>
+    <ul class="breakdown-list" id="largestModules">
+      <li class="module-item">
+        <div class="item-info">
+          <div class="item-name">Frameworks</div>
+          <div class="item-path">MyApp.app/ • 156 files</div>
+        </div>
+        <div class="item-size">
+          <span class="size-number">45.2 MB</span>
+          <span class="size-percentage">28.1%</span>
+        </div>
+      </li>
+      <li class="module-item">
+        <div class="item-info">
+          <div class="item-name">Resources</div>
+          <div class="item-path">MyApp.app/ • 89 files</div>
+        </div>
+        <div class="item-size">
+          <span class="size-number">32.7 MB</span>
+          <span class="size-percentage">20.3%</span>
+        </div>
+      </li>
+      <li class="module-item">
+        <div class="item-info">
+          <div class="item-name">Models</div>
+          <div class="item-path">MyApp.app/ • 12 files</div>
+        </div>
+        <div class="item-size">
+          <span class="size-number">15.4 MB</span>
+          <span class="size-percentage">9.6%</span>
+        </div>
+      </li>
     </ul>
   </div>
 
@@ -514,6 +668,123 @@ document.getElementById('chart').on('plotly_click', function(data) {
   const clickedLabel = data.points[0].label;
   console.log('Clicked label:', clickedLabel);
 });
+
+// Update largest files list
+function updateLargestFiles() {
+  const files = [];
+  
+  function processNode(node) {
+    if (!node.children) {
+      files.push(node);
+    } else {
+      node.children.forEach(processNode);
+    }
+  }
+  
+  processNode(fileTree);
+  
+  files.sort((a, b) => b.size - a.size);
+  const largestFiles = files.slice(0, 10);
+  const filesList = document.getElementById('largestFiles');
+  filesList.innerHTML = '';
+  
+  largestFiles.forEach(file => {
+    const percentage = (file.size / fileTree.size * 100).toFixed(1);
+    const fileName = file.relative_path.split('/').pop();
+    const filePath = file.relative_path.substring(0, file.relative_path.length - fileName.length);
+    const fileType = file.type || 'unknown';
+    
+    const li = document.createElement('li');
+    li.className = 'file-item';
+    li.innerHTML = ` + "`" + `
+      <div class="item-info">
+        <div class="item-name">${fileName}</div>
+        <div class="item-path">${filePath}</div>
+      </div>
+      <div class="item-size">
+        <span class="size-number">${formatSize(file.size)}</span>
+        <span class="size-percentage">${percentage}%</span>
+      </div>
+    ` + "`" + `;
+    filesList.appendChild(li);
+  });
+}
+
+// Update largest modules list
+function updateLargestModules() {
+  const modules = new Map();
+  
+  function processNode(node) {
+    if (node.children) {
+      if (node.size > 1024 * 1024) {
+        modules.set(node.relative_path, node);
+      }
+      node.children.forEach(processNode);
+    }
+  }
+  
+  processNode(fileTree);
+  
+  const sortedModules = Array.from(modules.values())
+    .sort((a, b) => b.size - a.size)
+    .slice(0, 10);
+  
+  const modulesList = document.getElementById('largestModules');
+  modulesList.innerHTML = '';
+  
+  sortedModules.forEach(module => {
+    const percentage = (module.size / fileTree.size * 100).toFixed(1);
+    const moduleName = module.relative_path.split('/').pop();
+    const modulePath = module.relative_path.substring(0, module.relative_path.length - moduleName.length);
+    const fileCount = countFiles(module);
+    
+    const li = document.createElement('li');
+    li.className = 'module-item';
+    li.innerHTML = ` + "`" + `
+      <div class="item-info">
+        <div class="item-name">${moduleName}</div>
+        <div class="item-path">${modulePath} • ${fileCount} files</div>
+      </div>
+      <div class="item-size">
+        <span class="size-number">${formatSize(module.size)}</span>
+        <span class="size-percentage">${percentage}%</span>
+      </div>
+    ` + "`" + `;
+    modulesList.appendChild(li);
+  });
+}
+
+// Helper function to count files in a module
+function countFiles(node) {
+  let count = 0;
+  function traverse(node) {
+    if (!node.children) {
+      count++;
+    } else {
+      node.children.forEach(traverse);
+    }
+  }
+  traverse(node);
+  return count;
+}
+
+// Helper function to get appropriate icon for file type
+function getFileIcon(type) {
+  const icons = {
+    'binary': '⚙️',
+    'asset_catalog': '🎨',
+    'font': '🔤',
+    'localization': '🌐',
+    'video': '🎬',
+    'coreml_model': '🧠',
+    'unknown': '📄'
+  };
+  return icons[type] || icons.unknown;
+}
+
+// Call the new functions during initialization
+updateLargestFiles();
+updateLargestModules();
 </script>
 </body>
 </html>`
