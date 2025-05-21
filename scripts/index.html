@@ -30,11 +30,65 @@
       margin-bottom: 20px;
       text-align: center;
     }
+    .info-banner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      background: #f8f8fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .info-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-value {
+      font-size: 16px;
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+    .size-info {
+      color: #0066cc;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <h1>App Bundle Size Analysis</h1>
+  <div class="info-banner">
+    <div class="info-item">
+      <span class="info-label">Name</span>
+      <span class="info-value" id="appName">HexaCalc</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Bundle ID</span>
+      <span class="info-value" id="bundleId">-</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Platform</span>
+      <span class="info-value" id="platform">iOS</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Version</span>
+      <span class="info-value" id="version">-</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Download Size</span>
+      <span class="info-value size-info" id="downloadSize">-</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Install Size</span>
+      <span class="info-value size-info" id="installSize">-</span>
+    </div>
+  </div>
   <div id="chart"></div>
 </div>
 <script>
@@ -309,6 +363,44 @@ const fileTree = {
     ]
   };
 
+// Helper function to format file size
+function formatSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Update bundle information from Info.plist
+function updateBundleInfo() {
+  const totalSize = fileTree.size;
+  document.getElementById('downloadSize').textContent = formatSize(totalSize);
+  document.getElementById('installSize').textContent = formatSize(totalSize);  // Using same size for now
+
+  // Find Info.plist in the tree
+  function findInfoPlist(node) {
+    if (node.relative_path === 'Info.plist') {
+      return node;
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        const result = findInfoPlist(child);
+        if (result) return result;
+      }
+    }
+    return null;
+  }
+
+  const infoPlist = findInfoPlist(fileTree);
+  if (infoPlist) {
+    // In a real implementation, we would parse the Info.plist file
+    // For now, we'll just show some placeholder data
+    document.getElementById('bundleId').textContent = 'com.example.hexacalc';
+    document.getElementById('version').textContent = '1.0.0';
+  }
+}
+
 // Helper function to flatten the tree
 function flatten(node, parentLabel, labels, parents, values, types) {
   const name = node.relative_path.split('/').pop();
@@ -359,7 +451,7 @@ const data = [{
 }];
 
 const layout = {
-  margin: { l: 0, r: 0, b: 0, t: 32 },  // Added top margin for the pathbar
+  margin: { l: 0, r: 0, b: 0, t: 32 },
   width: 900,
   height: 700,
   uniformtext: {
@@ -368,11 +460,13 @@ const layout = {
 };
 
 const config = {
-  displayModeBar: false,  // Hide the mode bar for cleaner look
+  displayModeBar: false,
   responsive: true
 };
 
+// Initialize the visualization
 Plotly.newPlot('chart', data, layout, config);
+updateBundleInfo();
 
 // Add click handler for the chart
 document.getElementById('chart').on('plotly_click', function(data) {
