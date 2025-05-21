@@ -10,9 +10,7 @@ import (
 	"howett.net/plist"
 )
 
-// AssetInfo represents information about an asset in the .car file
-type AssetInfo struct {
-	Name          string `json:"name"`
+type RenditionInfo struct {
 	RenditionName string `json:"rendition_name"`
 	Size          int64  `json:"size"`
 	Idiom         string `json:"idiom"`
@@ -21,11 +19,16 @@ type AssetInfo struct {
 	Shasum        string `json:"shasum"`
 }
 
+// AssetInfo represents information about an asset in the .car file
+type AssetInfo struct {
+	Name          string          `json:"name"`
+	RenditionInfo []RenditionInfo `json:"rendition_info"`
+}
+
 // CarFileInfo represents the analyzed contents of a .car file
 type CarFileInfo struct {
 	Path   string      `json:"path"`
 	Assets []AssetInfo `json:"assets"`
-	Type   string      `json:"type"`
 }
 
 // AssetsutilCatalog represents the JSON structure returned by assetutil
@@ -110,12 +113,21 @@ func ParseCARFile(path string) (*CarFileInfo, error) {
 		return nil, fmt.Errorf("failed to parse assetutil output: %v", err)
 	}
 
-	// Convert the assetutil output to our structure
-	assets := make([]AssetInfo, 0)
+	// Group renditions by name
+	assetMap := make(map[string]*AssetInfo)
 	for _, catalog := range catalogs {
-		fmt.Println("Catalog:", catalog)
-		asset := AssetInfo{
-			Name:          catalog.Name,
+		// Get or create the AssetInfo for this name
+		asset, exists := assetMap[catalog.Name]
+		if !exists {
+			asset = &AssetInfo{
+				Name:          catalog.Name,
+				RenditionInfo: make([]RenditionInfo, 0),
+			}
+			assetMap[catalog.Name] = asset
+		}
+
+		// Add the rendition info
+		rendition := RenditionInfo{
 			RenditionName: catalog.RenditionName,
 			Size:          catalog.SizeOnDisk,
 			Idiom:         catalog.Idiom,
@@ -123,12 +135,17 @@ func ParseCARFile(path string) (*CarFileInfo, error) {
 			Compression:   catalog.Compression,
 			Shasum:        catalog.SHA1Digest,
 		}
-		assets = append(assets, asset)
+		asset.RenditionInfo = append(asset.RenditionInfo, rendition)
+	}
+
+	// Convert map to slice
+	assets := make([]AssetInfo, 0, len(assetMap))
+	for _, asset := range assetMap {
+		assets = append(assets, *asset)
 	}
 
 	return &CarFileInfo{
 		Path:   path,
-		Type:   "asset_catalog",
 		Assets: assets,
 	}, nil
 }
