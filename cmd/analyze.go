@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bitrise-plugins-analyze/internal/visualize"
 	"errors"
 	"io"
 	"os"
@@ -12,11 +13,6 @@ const (
 	AppExtension       = ".app"
 	IpaExtension       = ".ipa"
 	XcarchiveExtension = ".xcarchive"
-)
-
-var (
-	context string
-	style   string
 )
 
 var annotateCmd = &cobra.Command{
@@ -48,7 +44,12 @@ var annotateCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		err := analyzeAppBundle(app_path)
+		bundle, err := analyzeAppBundle(app_path)
+		if err != nil {
+			return err
+		}
+
+		err = visualize.Visualize(bundle)
 		if err != nil {
 			return err
 		}
@@ -59,9 +60,4 @@ var annotateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(annotateCmd)
-
-	annotateCmd.Flags().StringVarP(&context, "context", "c", "",
-		"the context to find existing annotations and replace their content")
-	annotateCmd.Flags().StringVarP(&style, "style", "s", "default",
-		"the style to use for this annotation, such as default, error, warning, info")
 }

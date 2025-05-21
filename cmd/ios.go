@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func analyzeAppBundle(bundle_path string) error {
+func analyzeAppBundle(bundle_path string) (*analyzer.AppBundle, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var app_path string
@@ -30,25 +30,25 @@ func analyzeAppBundle(bundle_path string) error {
 	case XcarchiveExtension:
 		app_path, err = analyzeXcarchive(bundle_path)
 	default:
-		return fmt.Errorf("unsupported file extension: %s", ext)
+		return nil, fmt.Errorf("unsupported file extension: %s", ext)
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bundleInfo, err := analyzer.AnalyzeAppBundle(app_path)
 	if err != nil {
-		return fmt.Errorf("failed to analyze file: %v", err)
+		return nil, fmt.Errorf("failed to analyze file: %v", err)
 	}
 
 	jsonData, err := json.MarshalIndent(bundleInfo, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal file info: %v", err)
+		return nil, fmt.Errorf("failed to marshal file info: %v", err)
 	}
 	fmt.Println(string(jsonData))
 
-	return nil
+	return bundleInfo, nil
 }
 
 func analyzeXcarchive(app_path string) (string, error) {
