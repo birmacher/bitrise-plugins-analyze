@@ -52,7 +52,11 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputPath string) error {
 	}
 
 	// Convert FileTree to JSON string to make it safe for JavaScript
-	fileTreeJSON, err := json.Marshal(bundle.Files)
+	fileInfo, err := analyzer.FilesIncludingMetaInformation(bundle)
+	if err != nil {
+		return fmt.Errorf("failed to get file info: %v", err)
+	}
+	fileTreeJSON, err := json.Marshal(fileInfo)
 	if err != nil {
 		return fmt.Errorf("failed to marshal file tree: %v", err)
 	}
@@ -467,7 +471,7 @@ const data = [{
   outsidetextfont: { size: 14, color: "#888" },
   leaf: { opacity: 0.8 },
   marker: { colors: markerColors },
-  maxdepth: 3,
+  maxdepth: 5,
   pathbar: {
     visible: true,
     textfont: {

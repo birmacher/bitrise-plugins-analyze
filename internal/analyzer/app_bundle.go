@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -103,4 +104,56 @@ func calculateInstallSize(bundlePath string) (int64, error) {
 		return 0, err
 	}
 	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
+}
+
+func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
+	extendedFiles := bundle.Files
+
+	// For each CAR file, find matching file in extendedFiles and add asset info as children
+	for _, carFile := range bundle.CarFiles {
+		// Find matching file path in extendedFiles tree
+		var findAndAddAssets func(files *FileInfo) bool
+		findAndAddAssets = func(files *FileInfo) bool {
+			if files.RelativePath == carFile.Path {
+
+				// Add each asset as a child
+				for _, asset := range carFile.Assets {
+					assetPath := filepath.Join(carFile.Path, asset.Name)
+					assetInfo := FileInfo{
+						RelativePath: assetPath,
+						Type:         "image",
+						Children:     make([]FileInfo, 0),
+					}
+
+					// Add renditions as children of the asset
+					for _, rendition := range asset.RenditionInfo {
+						renditionInfo := FileInfo{
+							RelativePath: filepath.Join(assetPath, fmt.Sprintf("%s @ %dx (%s)", rendition.RenditionName, rendition.Scale, rendition.Idiom)),
+							Size:         rendition.Size,
+							Shasum:       rendition.Shasum,
+							Type:         "image",
+						}
+						assetInfo.Children = append(assetInfo.Children, renditionInfo)
+
+						assetInfo.Size += rendition.Size
+					}
+
+					files.Children = append(files.Children, assetInfo)
+				}
+				return true
+			}
+
+			// Recursively search children
+			for i := range files.Children {
+				if findAndAddAssets(&files.Children[i]) {
+					return true
+				}
+			}
+			return false
+		}
+
+		findAndAddAssets(&extendedFiles)
+	}
+
+	return extendedFiles, nil
 }

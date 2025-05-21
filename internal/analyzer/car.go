@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type RenditionInfo struct {
@@ -42,7 +43,7 @@ type AssetsutilCatalog struct {
 }
 
 // ParseCARFile uses assetutil to analyze the .car file and returns structured information
-func ParseCARFile(path string) (*CarFileInfo, error) {
+func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 	// Check if assetutil exists
 	if _, err := exec.LookPath("assetutil"); err != nil {
 		return nil, fmt.Errorf("assetutil not found: this tool requires macOS")
@@ -64,8 +65,21 @@ func ParseCARFile(path string) (*CarFileInfo, error) {
 	// Group renditions by name
 	assetMap := make(map[string]*AssetInfo)
 	for _, catalog := range catalogs {
+		if catalog.SizeOnDisk == 0 {
+			continue
+		}
+
+		// Skip renditions with empty names or system-generated packed assets
+		if catalog.Name == "" || strings.HasPrefix(catalog.Name, "ZZZZPackedAsset-") {
+			continue
+		}
+
 		// Get or create the AssetInfo for this name
-		asset, exists := assetMap[catalog.Name]
+		name := catalog.Name
+		if name == "" {
+			name = catalog.SHA1Digest
+		}
+		asset, exists := assetMap[name]
 		if !exists {
 			asset = &AssetInfo{
 				Name:          catalog.Name,
@@ -74,9 +88,18 @@ func ParseCARFile(path string) (*CarFileInfo, error) {
 			assetMap[catalog.Name] = asset
 		}
 
+		// Skip renditions with empty names or system-generated packed assets
+		if catalog.RenditionName == "" || strings.HasPrefix(catalog.RenditionName, "ZZZZPackedAsset-") {
+			continue
+		}
+
 		// Add the rendition info
+		renditionName := catalog.RenditionName
+		if renditionName == "" {
+			renditionName = catalog.SHA1Digest
+		}
 		rendition := RenditionInfo{
-			RenditionName: catalog.RenditionName,
+			RenditionName: renditionName,
 			Size:          catalog.SizeOnDisk,
 			Idiom:         catalog.Idiom,
 			Scale:         catalog.Scale,
@@ -92,8 +115,13 @@ func ParseCARFile(path string) (*CarFileInfo, error) {
 		assets = append(assets, *asset)
 	}
 
+	relativePath, err := filepath.Rel(basePath, path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get relative path: %v", err)
+	}
+
 	return &CarFileInfo{
-		Path:   path,
+		Path:   relativePath,
 		Assets: assets,
 	}, nil
 }
@@ -106,7 +134,7 @@ func FindAndAnalyzeCarFiles(bundlePath string, bundle *AppBundle) error {
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".car" {
-			carInfo, err := ParseCARFile(path)
+			carInfo, err := ParseCARFile(path, bundlePath)
 			if err != nil {
 				return fmt.Errorf("failed to analyze %s: %v", path, err)
 			}
