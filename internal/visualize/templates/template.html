@@ -184,7 +184,7 @@
     }
     .section-header {
       margin: 32px 0 8px;
-      padding: 0 16px;
+      padding: 0;
     }
     .section-description {
       font-size: 13px;
@@ -292,6 +292,13 @@
   </div>
 
   <div id="breakdown" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-icon">👀</span>
+        Categories
+      </h2>
+      <p class="section-description">Total size of files in each category.</p>
+    </div>
     <ul class="breakdown-list" id="typeBreakdown">
       <!-- Will be populated by JavaScript -->
     </ul>
@@ -368,7 +375,9 @@ function calculateTypeBreakdown(node) {
   
   function processNode(node) {
     const type = node.type || 'unknown';
-    breakdown[type] = (breakdown[type] || 0) + node.size;
+    if (node.type != "directory") {
+      breakdown[type] = (breakdown[type] || 0) + node.size;
+    }
     
     if (node.children) {
       node.children.forEach(processNode);
