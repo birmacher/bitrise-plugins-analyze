@@ -1,6 +1,12 @@
 package analyzer
 
-import "strings"
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
 
 // AppBundle represents an analyzed application bundle
 type AppBundle struct {
@@ -26,8 +32,18 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 	}
 
 	bundle.Files = files
-	// Todo: Correctly calculate download and install size
-	bundle.DownloadSize = files.Size
+
+	// Calculate download size
+	bundle.DownloadSize, err = calculateDownloadSize(bundlePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate install size using du command
+	bundle.InstallSize, err = calculateInstallSize(bundlePath)
+	if err != nil {
+		return nil, err
+	}
 
 	// iOS app bundle
 	if strings.HasSuffix(bundlePath, ".app") {
@@ -51,4 +67,40 @@ func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
 	}
 
 	return bundle, nil
+}
+
+func calculateDownloadSize(bundlePath string) (int64, error) {
+	tempDir, err := os.MkdirTemp("", "app-*")
+	if err != nil {
+		return 0, err
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create zip file path
+	zipPath := filepath.Join(tempDir, "app.zip")
+
+	// Run ditto command to create zip
+	cmd := exec.Command("ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", bundlePath, zipPath)
+	if err := cmd.Run(); err != nil {
+		return 0, err
+	}
+
+	// Get zip file size using stat
+	cmd = exec.Command("stat", "-f%z", zipPath)
+	output, err := cmd.Output()
+	if err != nil {
+		return 0, err
+	}
+
+	// Parse size from stat output
+	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
+}
+
+func calculateInstallSize(bundlePath string) (int64, error) {
+	cmd := exec.Command("sh", "-c", "du -sk "+bundlePath+" | awk '{print $1 * 1024}'")
+	output, err := cmd.Output()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
 }
