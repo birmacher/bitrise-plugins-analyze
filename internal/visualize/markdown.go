@@ -51,10 +51,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString("|--------|------|------------|------------|\n")
 
 	modules := findLargestModules(bundle.Files)
-	for i, module := range modules {
-		if i >= 10 {
-			break
-		}
+	for i, module := range modules[1:11] {
 		percentage := float64(module.size) / float64(bundle.InstallSize) * 100
 		content.WriteString(fmt.Sprintf("| %s | %s | %d | %.1f%% |\n",
 			module.path,
