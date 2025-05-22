@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,10 @@ const (
 	XcarchiveExtension = ".xcarchive"
 )
 
-var generateHTML bool
+var (
+	generateHTML bool
+	outputDir    string
+)
 
 var annotateCmd = &cobra.Command{
 	Use:   "analyze [path]",
@@ -52,7 +56,22 @@ var annotateCmd = &cobra.Command{
 		}
 
 		if generateHTML {
-			err = visualize.GenerateHTML(bundle, "index.html")
+			// If output directory is not specified, use current working directory
+			if outputDir == "" {
+				outputDir, err = os.Getwd()
+				if err != nil {
+					return err
+				}
+			}
+
+			// Create output directory if it doesn't exist
+			if err := os.MkdirAll(outputDir, 0755); err != nil {
+				return err
+			}
+
+			// Generate HTML in the specified directory
+			outputPath := filepath.Join(outputDir, "index.html")
+			err = visualize.GenerateHTML(bundle, outputPath)
 			if err != nil {
 				return err
 			}
@@ -65,4 +84,5 @@ var annotateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(annotateCmd)
 	annotateCmd.Flags().BoolVar(&generateHTML, "html", false, "Generate HTML visualization")
+	annotateCmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory where the HTML report will be generated (default: current directory)")
 }
