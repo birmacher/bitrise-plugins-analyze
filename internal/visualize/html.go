@@ -41,9 +41,9 @@ func formatSize(bytes int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
-// GenerateHTML generates an index.html file using the template and provided bundle data
-func GenerateHTML(bundle *analyzer.AppBundle, outputPath string) error {
-	// Parse the template from the constant string
+// GenerateHTML generates an HTML visualization of the bundle analysis
+func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
+	// Parse the template from the embedded file
 	tmpl, err := template.ParseFS(tmplFS, "templates/template.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
@@ -85,14 +85,13 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputPath string) error {
 		return fmt.Errorf("failed to execute template: %v", err)
 	}
 
-	// Create the output directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %v", err)
-	}
+	// Create HTML file named after bundle ID
+	htmlFileName := fmt.Sprintf("%s.html", bundle.BundleID)
+	htmlPath := filepath.Join(outputDir, htmlFileName)
 
 	// Write the rendered template to the output file
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
-		return fmt.Errorf("failed to write output file: %v", err)
+	if err := os.WriteFile(htmlPath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write HTML file: %v", err)
 	}
 
 	return nil

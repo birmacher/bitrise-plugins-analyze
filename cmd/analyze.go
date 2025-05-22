@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"bitrise-plugins-analyze/internal/visualize"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -72,28 +69,13 @@ var annotateCmd = &cobra.Command{
 		}
 
 		if generateJSON {
-			// Create JSON file named after bundle ID
-			jsonFileName := fmt.Sprintf("%s.json", bundle.BundleID)
-			jsonPath := filepath.Join(outputDir, jsonFileName)
-
-			// Marshal the bundle with indentation for better readability
-			jsonData, err := json.MarshalIndent(bundle, "", "  ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal bundle data: %v", err)
-			}
-
-			// Write JSON file
-			if err := os.WriteFile(jsonPath, jsonData, 0644); err != nil {
-				return fmt.Errorf("failed to write JSON file: %v", err)
+			if err := visualize.GenerateJSON(bundle, outputDir); err != nil {
+				return err
 			}
 		}
 
 		if generateHTML {
-			// Generate HTML file named after bundle ID
-			htmlFileName := fmt.Sprintf("%s.html", bundle.BundleID)
-			htmlPath := filepath.Join(outputDir, htmlFileName)
-			err = visualize.GenerateHTML(bundle, htmlPath)
-			if err != nil {
+			if err := visualize.GenerateHTML(bundle, outputDir); err != nil {
 				return err
 			}
 		}
