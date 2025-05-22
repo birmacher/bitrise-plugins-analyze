@@ -49,30 +49,32 @@ func CountFiles(root analyzer.FileInfo) int {
 func FindLargestModules(root analyzer.FileInfo) []analyzer.FileInfo {
 	modules := make([]analyzer.FileInfo, 0)
 
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
-		if len(file.Children) > 0 {
-			var totalSize int64
-			for _, child := range file.Children {
-				if len(child.Children) == 0 {
-					totalSize += child.Size
+	// Process only children of root to skip the root directory itself
+	for _, child := range root.Children {
+		var traverse func(file analyzer.FileInfo)
+		traverse = func(file analyzer.FileInfo) {
+			if len(file.Children) > 0 {
+				var totalSize int64
+				for _, child := range file.Children {
+					if len(child.Children) == 0 {
+						totalSize += child.Size
+					}
+					traverse(child)
 				}
-				traverse(child)
-			}
-			if totalSize > 0 {
-				// Create a new FileInfo for the module with calculated size
-				moduleInfo := analyzer.FileInfo{
-					RelativePath: file.RelativePath,
-					Size:         totalSize,
-					Children:     file.Children,
-					Type:         "directory",
+				if totalSize > 0 {
+					// Create a new FileInfo for the module with calculated size
+					moduleInfo := analyzer.FileInfo{
+						RelativePath: file.RelativePath,
+						Size:         totalSize,
+						Children:     file.Children,
+						Type:         "directory",
+					}
+					modules = append(modules, moduleInfo)
 				}
-				modules = append(modules, moduleInfo)
 			}
 		}
+		traverse(child)
 	}
-
-	traverse(root)
 
 	// Sort by size in descending order
 	sort.Slice(modules, func(i, j int) bool {

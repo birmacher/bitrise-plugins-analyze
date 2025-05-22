@@ -74,10 +74,8 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	}
 
 	largestModules := FindLargestModules(fileInfo)
-	if len(largestModules) > 11 { // 11 because we skip the first one (root)
-		largestModules = largestModules[1:11]
-	} else if len(largestModules) > 1 {
-		largestModules = largestModules[1:] // Skip root module
+	if len(largestModules) > 10 {
+		largestModules = largestModules[:10]
 	}
 
 	// Create template data
