@@ -22,6 +22,15 @@ type moduleWithSize struct {
 	fileCount int
 }
 
+// duplicateInfo represents information about duplicate content
+type duplicateInfo struct {
+	name        string   // file name or asset name
+	size        int64    // size of the duplicate
+	occurrences int      // number of occurrences
+	locations   []string // where the duplicates are found
+	isAsset     bool     // whether this is an asset catalog duplicate
+}
+
 // GenerateMarkdown generates a Markdown file containing the bundle analysis data
 func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	// Create Markdown file named after bundle ID
@@ -51,7 +60,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString("|--------|------|------------|------------|\n")
 
 	modules := findLargestModules(bundle.Files)
-	for i, module := range modules[1:11] {
+	for _, module := range modules[1:11] {
 		percentage := float64(module.size) / float64(bundle.InstallSize) * 100
 		content.WriteString(fmt.Sprintf("| %s | %s | %d | %.1f%% |\n",
 			module.path,
@@ -79,60 +88,84 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	}
 	content.WriteString("\n")
 
-	// Duplicate Files
-	content.WriteString("## Duplicate Files\n\n")
-	duplicates := findDuplicateFiles(bundle.Files)
-	if len(duplicates) > 0 {
-		content.WriteString("### File System Duplicates\n\n")
-		content.WriteString("| SHA256 | Size | Occurrences | Paths |\n")
-		content.WriteString("|--------|------|-------------|--------|\n")
+	// Collect all duplicates
+	var allDuplicates []duplicateInfo
 
-		for shasum, files := range duplicates {
-			if len(files) > 1 { // Only show actual duplicates
-				content.WriteString(fmt.Sprintf("| %s | %s | %d | %s |\n",
-					shasum[:8], // Show only first 8 chars of hash
-					formatSize(files[0].Size),
-					len(files),
-					strings.Join(getRelativePaths(files), "<br>")))
-			}
+	// Add filesystem duplicates
+	fsDuplicates := findDuplicateFiles(bundle.Files)
+	for _, files := range fsDuplicates {
+		if len(files) > 1 {
+			allDuplicates = append(allDuplicates, duplicateInfo{
+				name:        filepath.Base(files[0].RelativePath),
+				size:        files[0].Size,
+				occurrences: len(files),
+				locations:   getRelativePaths(files),
+				isAsset:     false,
+			})
 		}
-		content.WriteString("\n")
 	}
 
-	// CAR File Duplicates
+	// Add CAR file duplicates
 	if len(bundle.CarFiles) > 0 {
-		content.WriteString("### Asset Catalog Duplicates\n\n")
-		content.WriteString("| Asset Name | Size | Occurrences | Locations |\n")
-		content.WriteString("|------------|------|-------------|------------|\n")
-
-		// Map to track duplicates across all CAR files
-		assetDuplicates := make(map[string][]string)
-		assetSizes := make(map[string]int64)
+		assetDuplicates := make(map[string]*duplicateInfo)
 
 		for _, car := range bundle.CarFiles {
 			for _, asset := range car.Assets {
 				for _, rendition := range asset.RenditionInfo {
 					if rendition.Shasum != "" {
 						key := fmt.Sprintf("%s:%s", asset.Name, rendition.Shasum)
-						assetDuplicates[key] = append(assetDuplicates[key],
+						info, exists := assetDuplicates[key]
+						if !exists {
+							info = &duplicateInfo{
+								name:        asset.Name,
+								size:        rendition.Size,
+								occurrences: 0,
+								locations:   make([]string, 0),
+								isAsset:     true,
+							}
+							assetDuplicates[key] = info
+						}
+						info.occurrences++
+						info.locations = append(info.locations,
 							fmt.Sprintf("%s (%s)", car.Path, rendition.RenditionName))
-						assetSizes[key] = rendition.Size
 					}
 				}
 			}
 		}
 
-		// Filter and sort duplicates
-		for key, locations := range assetDuplicates {
-			if len(locations) > 1 {
-				assetName := strings.Split(key, ":")[0]
-				content.WriteString(fmt.Sprintf("| %s | %s | %d | %s |\n",
-					assetName,
-					formatSize(assetSizes[key]),
-					len(locations),
-					strings.Join(locations, "<br>")))
+		// Add asset duplicates to the main list
+		for _, info := range assetDuplicates {
+			if info.occurrences > 1 {
+				allDuplicates = append(allDuplicates, *info)
 			}
 		}
+	}
+
+	// Sort duplicates by size
+	sort.Slice(allDuplicates, func(i, j int) bool {
+		return allDuplicates[i].size > allDuplicates[j].size
+	})
+
+	// Write combined duplicates table
+	if len(allDuplicates) > 0 {
+		content.WriteString("## Duplicate Content\n\n")
+		content.WriteString("| Name | Type | Size | Occurrences | Locations |\n")
+		content.WriteString("|------|------|------|-------------|------------|\n")
+
+		for _, dup := range allDuplicates {
+			contentType := "File"
+			if dup.isAsset {
+				contentType = "Asset"
+			}
+
+			content.WriteString(fmt.Sprintf("| %s | %s | %s | %d | %s |\n",
+				dup.name,
+				contentType,
+				formatSize(dup.size),
+				dup.occurrences,
+				strings.Join(dup.locations, "<br>")))
+		}
+		content.WriteString("\n")
 	}
 
 	// Write the markdown file
