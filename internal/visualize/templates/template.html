@@ -473,7 +473,7 @@
   </div>
 </div>
 <script>
-const fileTree = {{.FileTree}};
+let fileTree = {{.FileTree}};
 
 // Helper function to format file size
 function formatSize(bytes) {
@@ -646,6 +646,22 @@ document.getElementById('chart').on('plotly_click', function(data) {
   console.log('Clicked label:', clickedLabel);
 });
 
+// Helper function to count files in a node
+function countFiles(node) {
+  let count = 0;
+  if (!node.children) {
+    return 1;
+  }
+  for (const child of node.children) {
+    if (!child.children) {
+      count++;
+    } else {
+      count += countFiles(child);
+    }
+  }
+  return count;
+}
+
 // Update largest files list
 function updateLargestFiles() {
   const files = [];
@@ -669,7 +685,6 @@ function updateLargestFiles() {
     const percentage = (file.size / fileTree.size * 100).toFixed(1);
     const fileName = file.relative_path.split('/').pop();
     const filePath = file.relative_path.substring(0, file.relative_path.length - fileName.length);
-    const fileType = file.type || 'unknown';
     
     const li = document.createElement('li');
     li.className = 'file-item';
@@ -693,8 +708,23 @@ function updateLargestModules() {
   
   function processNode(node) {
     if (node.children && node.children.length > 0) {
-      // Only include directories that have children
-      modules.push(node);
+      let totalSize = 0;
+      node.children.forEach(child => {
+        if (!child.children) {
+          totalSize += child.size;
+        }
+      });
+      
+      if (totalSize > 0) {
+        const moduleInfo = {
+          relative_path: node.relative_path,
+          size: totalSize,
+          children: node.children,
+          type: "directory"
+        };
+        modules.push(moduleInfo);
+      }
+      
       node.children.forEach(processNode);
     }
   }
@@ -712,14 +742,13 @@ function updateLargestModules() {
     const percentage = (module.size / fileTree.size * 100).toFixed(1);
     const moduleName = module.relative_path.split('/').pop();
     const modulePath = module.relative_path.substring(0, module.relative_path.length - moduleName.length);
-    const fileCount = countFiles(module);
     
     const li = document.createElement('li');
     li.className = 'module-item';
     li.innerHTML = `
       <div class="item-info">
         <div class="item-name">${moduleName}</div>
-        <div class="item-path">${modulePath} • ${fileCount} files</div>
+        <div class="item-path">${modulePath} • ${countFiles(module)} files</div>
       </div>
       <div class="item-size">
         <span class="size-number">${formatSize(module.size)}</span>
@@ -728,20 +757,6 @@ function updateLargestModules() {
     `;
     modulesList.appendChild(li);
   });
-}
-
-// Helper function to count files in a module
-function countFiles(node) {
-  let count = 0;
-  function traverse(node) {
-    if (!node.children) {
-      count++;
-    } else {
-      node.children.forEach(traverse);
-    }
-  }
-  traverse(node);
-  return count;
 }
 
 // Helper function to get appropriate icon for file type

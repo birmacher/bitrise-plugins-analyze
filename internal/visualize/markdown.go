@@ -58,7 +58,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString("## 📦 Top 10 Largest Modules\n\n")
 	content.WriteString("<details>\n")
 
-	modules := findLargestModules(bundle.Files)
+	modules := FindLargestModules(bundle.Files)
 
 	// Count modules (excluding root)
 	moduleCount := len(modules)
@@ -71,7 +71,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	totalSize := int64(0)
 	for _, module := range modules[1:] {
-		totalSize += module.size
+		totalSize += module.Size
 	}
 
 	content.WriteString(fmt.Sprintf("<summary>Found %d modules totaling %s, click to expand</summary>\n\n",
@@ -86,11 +86,11 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	}
 	if endIndex > 1 { // Only process if we have modules beyond the root
 		for _, module := range modules[1:endIndex] {
-			percentage := float64(module.size) / float64(bundle.InstallSize) * 100
+			percentage := float64(module.Size) / float64(bundle.InstallSize) * 100
 			content.WriteString(fmt.Sprintf("| %s | %s | %d | %.1f%% |\n",
-				module.path,
-				formatSize(module.size),
-				module.fileCount,
+				module.RelativePath,
+				formatSize(module.Size),
+				CountFiles(module),
 				percentage))
 		}
 	}
@@ -100,7 +100,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString("## 📄 Top 10 Largest Files\n\n")
 	content.WriteString("<details>\n")
 
-	files := findLargestFiles(bundle.Files)
+	files := FindLargestFiles(bundle.Files)
 	fileCount := len(files)
 	if fileCount > 10 {
 		fileCount = 10
@@ -108,7 +108,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	totalFileSize := int64(0)
 	for i := 0; i < fileCount; i++ {
-		totalFileSize += files[i].size
+		totalFileSize += files[i].Size
 	}
 
 	content.WriteString(fmt.Sprintf("<summary>Found %d large files totaling %s, click to expand</summary>\n\n",
@@ -120,10 +120,10 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 		if i >= 10 {
 			break
 		}
-		percentage := float64(file.size) / float64(bundle.InstallSize) * 100
+		percentage := float64(file.Size) / float64(bundle.InstallSize) * 100
 		content.WriteString(fmt.Sprintf("| %s | %s | %.1f%% |\n",
-			file.path,
-			formatSize(file.size),
+			file.RelativePath,
+			formatSize(file.Size),
 			percentage))
 	}
 	content.WriteString("\n</details>\n\n")
@@ -224,69 +224,6 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	}
 
 	return nil
-}
-
-// findLargestModules returns a sorted list of largest modules (directories)
-func findLargestModules(root analyzer.FileInfo) []moduleWithSize {
-	modules := make([]moduleWithSize, 0)
-
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
-		if len(file.Children) > 0 {
-			fileCount := 0
-			var totalSize int64
-			for _, child := range file.Children {
-				if len(child.Children) == 0 {
-					fileCount++
-					totalSize += child.Size
-				}
-				traverse(child)
-			}
-			if totalSize > 0 {
-				modules = append(modules, moduleWithSize{
-					path:      file.RelativePath,
-					size:      totalSize,
-					fileCount: fileCount,
-				})
-			}
-		}
-	}
-
-	traverse(root)
-
-	// Sort by size in descending order
-	sort.Slice(modules, func(i, j int) bool {
-		return modules[i].size > modules[j].size
-	})
-
-	return modules
-}
-
-// findLargestFiles returns a sorted list of largest individual files
-func findLargestFiles(root analyzer.FileInfo) []fileWithSize {
-	files := make([]fileWithSize, 0)
-
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
-		if len(file.Children) == 0 && file.Size > 0 {
-			files = append(files, fileWithSize{
-				path: file.RelativePath,
-				size: file.Size,
-			})
-		}
-		for _, child := range file.Children {
-			traverse(child)
-		}
-	}
-
-	traverse(root)
-
-	// Sort by size in descending order
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].size > files[j].size
-	})
-
-	return files
 }
 
 // findDuplicateFiles returns a map of SHA256 hashes to files with that hash

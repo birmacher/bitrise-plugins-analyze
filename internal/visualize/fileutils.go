@@ -1,0 +1,83 @@
+package visualize
+
+import (
+	"bitrise-plugins-analyze/internal/analyzer"
+	"sort"
+)
+
+// FindLargestFiles returns a sorted list of largest individual files
+func FindLargestFiles(root analyzer.FileInfo) []analyzer.FileInfo {
+	files := make([]analyzer.FileInfo, 0)
+
+	var traverse func(file analyzer.FileInfo)
+	traverse = func(file analyzer.FileInfo) {
+		if len(file.Children) == 0 && file.Size > 0 {
+			files = append(files, file)
+		}
+		for _, child := range file.Children {
+			traverse(child)
+		}
+	}
+
+	traverse(root)
+
+	// Sort by size in descending order
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Size > files[j].Size
+	})
+
+	return files
+}
+
+// CountFiles returns the number of files (non-directory nodes) in a FileInfo tree
+func CountFiles(root analyzer.FileInfo) int {
+	count := 0
+	if len(root.Children) == 0 {
+		return 1
+	}
+	for _, child := range root.Children {
+		if len(child.Children) == 0 {
+			count++
+		} else {
+			count += CountFiles(child)
+		}
+	}
+	return count
+}
+
+// FindLargestModules returns a sorted list of largest modules (directories)
+func FindLargestModules(root analyzer.FileInfo) []analyzer.FileInfo {
+	modules := make([]analyzer.FileInfo, 0)
+
+	var traverse func(file analyzer.FileInfo)
+	traverse = func(file analyzer.FileInfo) {
+		if len(file.Children) > 0 {
+			var totalSize int64
+			for _, child := range file.Children {
+				if len(child.Children) == 0 {
+					totalSize += child.Size
+				}
+				traverse(child)
+			}
+			if totalSize > 0 {
+				// Create a new FileInfo for the module with calculated size
+				moduleInfo := analyzer.FileInfo{
+					RelativePath: file.RelativePath,
+					Size:         totalSize,
+					Children:     file.Children,
+					Type:         "directory",
+				}
+				modules = append(modules, moduleInfo)
+			}
+		}
+	}
+
+	traverse(root)
+
+	// Sort by size in descending order
+	sort.Slice(modules, func(i, j int) bool {
+		return modules[i].Size > modules[j].Size
+	})
+
+	return modules
+}
