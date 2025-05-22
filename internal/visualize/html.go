@@ -28,6 +28,7 @@ type templateData struct {
 	LargestFiles   []analyzer.FileInfo
 	LargestModules []analyzer.FileInfo
 	TypeBreakdown  []TypeBreakdown
+	Duplicates     []DuplicateGroup
 }
 
 // formatSize converts bytes to a human-readable string
@@ -84,6 +85,9 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	// Calculate type breakdown
 	typeBreakdown := CalculateTypeBreakdown(fileInfo)
 
+	// Find duplicate files
+	duplicates := FindDuplicates(fileInfo)
+
 	// Create template data
 	data := templateData{
 		Title:          "App Bundle Analysis",
@@ -97,6 +101,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		LargestFiles:   largestFiles,
 		LargestModules: largestModules,
 		TypeBreakdown:  typeBreakdown,
+		Duplicates:     duplicates,
 	}
 
 	// Create a buffer to store the rendered template
