@@ -27,6 +27,7 @@ type templateData struct {
 	FileTree       template.JS
 	LargestFiles   []analyzer.FileInfo
 	LargestModules []analyzer.FileInfo
+	TypeBreakdown  []TypeBreakdown
 }
 
 // formatSize converts bytes to a human-readable string
@@ -46,7 +47,9 @@ func formatSize(bytes int64) string {
 // GenerateHTML generates an HTML visualization of the bundle analysis
 func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	// Parse the template from the embedded file
-	tmpl, err := template.ParseFS(tmplFS, "templates/template.html")
+	tmpl, err := template.New("template.html").Funcs(template.FuncMap{
+		"formatSize": formatSize,
+	}).ParseFS(tmplFS, "templates/template.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
 	}
@@ -78,6 +81,9 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		largestModules = largestModules[:10]
 	}
 
+	// Calculate type breakdown
+	typeBreakdown := CalculateTypeBreakdown(fileInfo)
+
 	// Create template data
 	data := templateData{
 		Title:          "App Bundle Analysis",
@@ -90,6 +96,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		FileTree:       template.JS(fileTreeJSON),
 		LargestFiles:   largestFiles,
 		LargestModules: largestModules,
+		TypeBreakdown:  typeBreakdown,
 	}
 
 	// Create a buffer to store the rendered template

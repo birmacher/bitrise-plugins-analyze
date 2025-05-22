@@ -427,7 +427,15 @@
       <p class="section-description">Total size of files in each category.</p>
     </div>
     <ul class="breakdown-list" id="typeBreakdown">
-      <!-- Will be populated by JavaScript -->
+      {{range .TypeBreakdown}}
+      <li class="breakdown-item">
+        <span class="breakdown-type">{{.Type}}</span>
+        <div class="breakdown-bar">
+          <div class="breakdown-bar-fill" style="width: {{printf "%.1f" .Percentage}}%"></div>
+        </div>
+        <span class="breakdown-size">{{formatSize .Size}}</span>
+      </li>
+      {{end}}
     </ul>
 
     <div class="sections-grid">
@@ -539,49 +547,6 @@ function updateLargestModules() {
   });
 }
 
-// Calculate type breakdown
-function calculateTypeBreakdown(node) {
-  const breakdown = {};
-  
-  function processNode(node) {
-    const type = node.type || 'unknown';
-    if (node.type != "directory") {
-      breakdown[type] = (breakdown[type] || 0) + node.size;
-    }
-    
-    if (node.children) {
-      node.children.forEach(processNode);
-    }
-  }
-  
-  processNode(node);
-  return breakdown;
-}
-
-// Update type breakdown
-function updateBreakdown() {
-  const breakdown = calculateTypeBreakdown(fileTree);
-  const totalSize = fileTree.size;
-  const breakdownList = document.getElementById('typeBreakdown');
-  breakdownList.innerHTML = '';
-  
-  Object.entries(breakdown)
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([type, size]) => {
-      const percentage = (size / totalSize * 100).toFixed(1);
-      const li = document.createElement('li');
-      li.className = 'breakdown-item';
-      li.innerHTML = `
-        <span class="breakdown-type">${type}</span>
-        <div class="breakdown-bar">
-          <div class="breakdown-bar-fill" style="width: ${percentage}%"></div>
-        </div>
-        <span class="breakdown-size">${formatSize(size)}</span>
-      `;
-      breakdownList.appendChild(li);
-    });
-}
-
 // Helper function to flatten the tree for the treemap visualization
 function flatten(node, parentLabel, labels, parents, values, types, ids) {
   const name = node.relative_path.split('/').pop();
@@ -681,7 +646,6 @@ document.querySelectorAll('.tab').forEach(tab => {
 // Call initChart initially and on window resize
 initChart();
 window.addEventListener('resize', initChart);
-updateBreakdown();
 updateLargestFiles();
 updateLargestModules();
 
