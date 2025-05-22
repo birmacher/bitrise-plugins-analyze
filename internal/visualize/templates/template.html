@@ -474,8 +474,10 @@
           <span class="section-icon">🗑️</span>
           Remove Duplicate Files
         </h2>
-        {{with index .Duplicates 0}}
-        <p class="section-description">Potential savings: {{formatSize .TotalWasted}} ({{printf "%.1f" .WastedPercent}}% saved)</p>
+        {{with .Duplicates}}
+        <p class="section-description">
+          Potential savings: {{formatSize (index . 0).TotalWasted}} ({{printf "%.1f" (index . 0).WastedPercent}}% saved)
+        </p>
         {{end}}
       </div>
       <ul class="breakdown-list" id="duplicatesList">
