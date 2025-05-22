@@ -60,13 +60,20 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString("|--------|------|------------|------------|\n")
 
 	modules := findLargestModules(bundle.Files)
-	for _, module := range modules[1:11] {
-		percentage := float64(module.size) / float64(bundle.InstallSize) * 100
-		content.WriteString(fmt.Sprintf("| %s | %s | %d | %.1f%% |\n",
-			module.path,
-			formatSize(module.size),
-			module.fileCount,
-			percentage))
+	// Skip the root module (index 0) and take up to 10 modules
+	endIndex := len(modules)
+	if endIndex > 11 { // 11 because we skip the first one
+		endIndex = 11
+	}
+	if endIndex > 1 { // Only process if we have modules beyond the root
+		for _, module := range modules[1:endIndex] {
+			percentage := float64(module.size) / float64(bundle.InstallSize) * 100
+			content.WriteString(fmt.Sprintf("| %s | %s | %d | %.1f%% |\n",
+				module.path,
+				formatSize(module.size),
+				module.fileCount,
+				percentage))
+		}
 	}
 	content.WriteString("\n")
 
