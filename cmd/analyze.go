@@ -16,9 +16,10 @@ const (
 )
 
 var (
-	generateHTML bool
-	outputDir    string
-	generateJSON bool
+	generateHTML     bool
+	outputDir        string
+	generateJSON     bool
+	generateMarkdown bool
 )
 
 var annotateCmd = &cobra.Command{
@@ -80,6 +81,12 @@ var annotateCmd = &cobra.Command{
 			}
 		}
 
+		if generateMarkdown {
+			if err := visualize.GenerateMarkdown(bundle, outputDir); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	},
 }
@@ -88,5 +95,6 @@ func init() {
 	rootCmd.AddCommand(annotateCmd)
 	annotateCmd.Flags().BoolVar(&generateHTML, "html", false, "Generate HTML visualization")
 	annotateCmd.Flags().BoolVar(&generateJSON, "json", false, "Generate JSON output file")
+	annotateCmd.Flags().BoolVar(&generateMarkdown, "markdown", false, "Generate Markdown report")
 	annotateCmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory where the output files will be generated (default: current directory)")
 }
