@@ -15,6 +15,8 @@ const (
 	XcarchiveExtension = ".xcarchive"
 )
 
+var generateHTML bool
+
 var annotateCmd = &cobra.Command{
 	Use:   "analyze [path]",
 	Short: "Analyze App",
@@ -49,9 +51,11 @@ var annotateCmd = &cobra.Command{
 			return err
 		}
 
-		err = visualize.GenerateHTML(bundle, "index.html")
-		if err != nil {
-			return err
+		if generateHTML {
+			err = visualize.GenerateHTML(bundle, "index.html")
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -60,4 +64,5 @@ var annotateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(annotateCmd)
+	annotateCmd.Flags().BoolVar(&generateHTML, "html", false, "Generate HTML visualization")
 }
