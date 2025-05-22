@@ -618,6 +618,8 @@ function initChart() {
     leaf: { opacity: 0.8 },
     marker: { colors: markerColors },
     maxdepth: 4,
+    hoverinfo: 'skip',
+    hoverlabel: { enabled: false },
     pathbar: {
       visible: true,
       textfont: {
@@ -636,7 +638,8 @@ function initChart() {
     height: 700,
     uniformtext: {
       minsize: 10
-    }
+    },
+    hovermode: false
   };
 
   const config = {
