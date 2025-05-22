@@ -474,6 +474,8 @@
 </div>
 <script>
 let fileTree = {{.FileTree}};
+let largestFiles = {{.LargestFiles}};
+let largestModules = {{.LargestModules}};
 
 // Helper function to format file size
 function formatSize(bytes) {
@@ -482,6 +484,59 @@ function formatSize(bytes) {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Update largest files list using pre-calculated data
+function updateLargestFiles() {
+  const filesList = document.getElementById('largestFiles');
+  filesList.innerHTML = '';
+  
+  largestFiles.forEach(file => {
+    const percentage = (file.size / fileTree.size * 100).toFixed(1);
+    const fileName = file.relative_path.split('/').pop();
+    const filePath = file.relative_path.substring(0, file.relative_path.length - fileName.length);
+    
+    const li = document.createElement('li');
+    li.className = 'file-item';
+    li.innerHTML = `
+      <div class="item-info">
+        <div class="item-name">${fileName}</div>
+        <div class="item-path">${filePath}</div>
+      </div>
+      <div class="item-size">
+        <span class="size-number">${formatSize(file.size)}</span>
+        <span class="size-percentage">${percentage}%</span>
+      </div>
+    `;
+    filesList.appendChild(li);
+  });
+}
+
+// Update largest modules list using pre-calculated data
+function updateLargestModules() {
+  const modulesList = document.getElementById('largestModules');
+  modulesList.innerHTML = '';
+  
+  largestModules.forEach(module => {
+    const percentage = (module.size / fileTree.size * 100).toFixed(1);
+    const moduleName = module.relative_path.split('/').pop();
+    const modulePath = module.relative_path.substring(0, module.relative_path.length - moduleName.length);
+    const fileCount = module.children.filter(child => !child.children || child.children.length === 0).length;
+    
+    const li = document.createElement('li');
+    li.className = 'module-item';
+    li.innerHTML = `
+      <div class="item-info">
+        <div class="item-name">${moduleName}</div>
+        <div class="item-path">${modulePath} • ${fileCount} files</div>
+      </div>
+      <div class="item-size">
+        <span class="size-number">${formatSize(module.size)}</span>
+        <span class="size-percentage">${percentage}%</span>
+      </div>
+    `;
+    modulesList.appendChild(li);
+  });
 }
 
 // Calculate type breakdown
@@ -501,11 +556,6 @@ function calculateTypeBreakdown(node) {
   
   processNode(node);
   return breakdown;
-}
-
-// Update insights
-function updateInsights() {
-  updateDuplicates();
 }
 
 // Update type breakdown
@@ -532,36 +582,16 @@ function updateBreakdown() {
     });
 }
 
-// Tab switching functionality
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    // Remove active class from all tabs and content
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    
-    // Add active class to clicked tab and corresponding content
-    tab.classList.add('active');
-    const contentId = tab.getAttribute('data-tab');
-    document.getElementById(contentId).classList.add('active');
-  });
-});
-
-// Helper function to flatten the tree
+// Helper function to flatten the tree for the treemap visualization
 function flatten(node, parentLabel, labels, parents, values, types, ids) {
   const name = node.relative_path.split('/').pop();
   const label = (parentLabel === null) ? "{{.AppName}}.app" : name;
   const id = (parentLabel === null) ? "{{.AppName}}.app" : node.relative_path;
   
-  // Get all duplicate files
-  const duplicateFiles = new Set();
-  findDuplicates().forEach(group => {
-    group.forEach(file => duplicateFiles.add(file.relative_path));
-  });
-  
   labels.push(label);
   parents.push(parentLabel === null ? "" : parentLabel);
   values.push(node.size);
-  types.push(duplicateFiles.has(node.relative_path) ? 'duplicate' : node.type);
+  types.push(node.type || 'unknown');
   ids.push(id);
   
   if (node.children) {
@@ -571,51 +601,51 @@ function flatten(node, parentLabel, labels, parents, values, types, ids) {
   }
 }
 
-const labels = [], parents = [], values = [], types = [], ids = [];
-flatten(fileTree, null, labels, parents, values, types, ids);
-
-// Optional: assign color per type
-const colorMap = {
-  directory: "#b0b4ff",
-  binary: "#a5d8ff",
-  asset_catalog: "#ffe066",
-  duplicate: "#ff3b30",
-  font: "#ff9f0a",
-  localization: "#30d158",
-  image: "#64d2ff",
-  video: "#bf5af2",
-  coreml_model: "#ff453a",
-  "": "#ddd"
-};
-const markerColors = types.map(type => colorMap[type] || "#ddd");
-
-const data = [{
-  type: "treemap",
-  labels,
-  ids,
-  parents,
-  values,
-  branchvalues: 'total',
-  textinfo: 'label+value',
-  texttemplate: '%{label}<br><span class="size-tag">%{customdata}</span>',
-  customdata: values.map(size => formatSize(size)),
-  outsidetextfont: { size: 14, color: "#888" },
-  leaf: { opacity: 0.8 },
-  marker: { colors: markerColors },
-  maxdepth: 4,
-  pathbar: {
-    visible: true,
-    textfont: {
-      size: 12,
-      color: "#000"
-    },
-    side: "top",
-    thickness: 25
-  }
-}];
-
 // Initialize everything
 function initChart() {
+  const labels = [], parents = [], values = [], types = [], ids = [];
+  flatten(fileTree, null, labels, parents, values, types, ids);
+
+  // Color mapping for different file types
+  const colorMap = {
+    directory: "#b0b4ff",
+    binary: "#a5d8ff",
+    asset_catalog: "#ffe066",
+    duplicate: "#ff3b30",
+    font: "#ff9f0a",
+    localization: "#30d158",
+    image: "#64d2ff",
+    video: "#bf5af2",
+    coreml_model: "#ff453a",
+    "": "#ddd"
+  };
+  const markerColors = types.map(type => colorMap[type] || "#ddd");
+
+  const data = [{
+    type: "treemap",
+    labels,
+    ids,
+    parents,
+    values,
+    branchvalues: 'total',
+    textinfo: 'label+value',
+    texttemplate: '%{label}<br><span class="size-tag">%{customdata}</span>',
+    customdata: values.map(size => formatSize(size)),
+    outsidetextfont: { size: 14, color: "#888" },
+    leaf: { opacity: 0.8 },
+    marker: { colors: markerColors },
+    maxdepth: 4,
+    pathbar: {
+      visible: true,
+      textfont: {
+        size: 12,
+        color: "#000"
+      },
+      side: "top",
+      thickness: 25
+    }
+  }];
+
   const chartDiv = document.getElementById('chart');
   const layout = {
     margin: { l: 0, r: 0, b: 0, t: 32 },
@@ -634,130 +664,32 @@ function initChart() {
   Plotly.newPlot('chart', data, layout, config);
 }
 
+// Tab switching functionality
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // Remove active class from all tabs and content
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding content
+    tab.classList.add('active');
+    const contentId = tab.getAttribute('data-tab');
+    document.getElementById(contentId).classList.add('active');
+  });
+});
+
 // Call initChart initially and on window resize
 initChart();
 window.addEventListener('resize', initChart);
 updateBreakdown();
-updateInsights();
+updateLargestFiles();
+updateLargestModules();
 
 // Add click handler for the chart
 document.getElementById('chart').on('plotly_click', function(data) {
   const clickedLabel = data.points[0].label;
   console.log('Clicked label:', clickedLabel);
 });
-
-// Helper function to count files in a node
-function countFiles(node) {
-  let count = 0;
-  if (!node.children) {
-    return 1;
-  }
-  for (const child of node.children) {
-    if (!child.children) {
-      count++;
-    } else {
-      count += countFiles(child);
-    }
-  }
-  return count;
-}
-
-// Update largest files list
-function updateLargestFiles() {
-  const files = [];
-  
-  function processNode(node) {
-    if (!node.children) {
-      files.push(node);
-    } else {
-      node.children.forEach(processNode);
-    }
-  }
-  
-  processNode(fileTree);
-  
-  files.sort((a, b) => b.size - a.size);
-  const largestFiles = files.slice(0, 10);
-  const filesList = document.getElementById('largestFiles');
-  filesList.innerHTML = '';
-  
-  largestFiles.forEach(file => {
-    const percentage = (file.size / fileTree.size * 100).toFixed(1);
-    const fileName = file.relative_path.split('/').pop();
-    const filePath = file.relative_path.substring(0, file.relative_path.length - fileName.length);
-    
-    const li = document.createElement('li');
-    li.className = 'file-item';
-    li.innerHTML = `
-      <div class="item-info">
-        <div class="item-name">${fileName}</div>
-        <div class="item-path">${filePath}</div>
-      </div>
-      <div class="item-size">
-        <span class="size-number">${formatSize(file.size)}</span>
-        <span class="size-percentage">${percentage}%</span>
-      </div>
-    `;
-    filesList.appendChild(li);
-  });
-}
-
-// Update largest modules list
-function updateLargestModules() {
-  const modules = [];
-  
-  function processNode(node) {
-    if (node.children && node.children.length > 0) {
-      let totalSize = 0;
-      node.children.forEach(child => {
-        if (!child.children) {
-          totalSize += child.size;
-        }
-      });
-      
-      if (totalSize > 0) {
-        const moduleInfo = {
-          relative_path: node.relative_path,
-          size: totalSize,
-          children: node.children,
-          type: "directory"
-        };
-        modules.push(moduleInfo);
-      }
-      
-      node.children.forEach(processNode);
-    }
-  }
-  
-  processNode(fileTree);
-  
-  const sortedModules = modules
-    .sort((a, b) => b.size - a.size)
-    .slice(1, 11);
-  
-  const modulesList = document.getElementById('largestModules');
-  modulesList.innerHTML = '';
-  
-  sortedModules.forEach(module => {
-    const percentage = (module.size / fileTree.size * 100).toFixed(1);
-    const moduleName = module.relative_path.split('/').pop();
-    const modulePath = module.relative_path.substring(0, module.relative_path.length - moduleName.length);
-    
-    const li = document.createElement('li');
-    li.className = 'module-item';
-    li.innerHTML = `
-      <div class="item-info">
-        <div class="item-name">${moduleName}</div>
-        <div class="item-path">${modulePath} • ${countFiles(module)} files</div>
-      </div>
-      <div class="item-size">
-        <span class="size-number">${formatSize(module.size)}</span>
-        <span class="size-percentage">${percentage}%</span>
-      </div>
-    `;
-    modulesList.appendChild(li);
-  });
-}
 
 // Helper function to get appropriate icon for file type
 function getFileIcon(type) {
@@ -772,10 +704,6 @@ function getFileIcon(type) {
   };
   return icons[type] || icons.unknown;
 }
-
-// Call the new functions during initialization
-updateLargestFiles();
-updateLargestModules();
 
 // Find duplicate files
 function findDuplicates() {

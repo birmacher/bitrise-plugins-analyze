@@ -17,14 +17,16 @@ var tmplFS embed.FS
 
 // templateData represents the data structure for the HTML template
 type templateData struct {
-	Title        string
-	AppName      string
-	BundleID     string
-	Platform     string
-	Version      string
-	DownloadSize string
-	InstallSize  string
-	FileTree     template.JS
+	Title          string
+	AppName        string
+	BundleID       string
+	Platform       string
+	Version        string
+	DownloadSize   string
+	InstallSize    string
+	FileTree       template.JS
+	LargestFiles   []analyzer.FileInfo
+	LargestModules []analyzer.FileInfo
 }
 
 // formatSize converts bytes to a human-readable string
@@ -65,16 +67,31 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		return fmt.Errorf("failed to marshal file tree: %v", err)
 	}
 
+	// Pre-calculate largest files and modules
+	largestFiles := FindLargestFiles(fileInfo)
+	if len(largestFiles) > 10 {
+		largestFiles = largestFiles[:10]
+	}
+
+	largestModules := FindLargestModules(fileInfo)
+	if len(largestModules) > 11 { // 11 because we skip the first one (root)
+		largestModules = largestModules[1:11]
+	} else if len(largestModules) > 1 {
+		largestModules = largestModules[1:] // Skip root module
+	}
+
 	// Create template data
 	data := templateData{
-		Title:        "App Bundle Analysis",
-		AppName:      appName,
-		BundleID:     bundle.BundleID,
-		Platform:     bundle.SupportedPlatforms[0], // Use first platform
-		Version:      bundle.Version,
-		DownloadSize: formatSize(bundle.DownloadSize),
-		InstallSize:  formatSize(bundle.InstallSize),
-		FileTree:     template.JS(fileTreeJSON),
+		Title:          "App Bundle Analysis",
+		AppName:        appName,
+		BundleID:       bundle.BundleID,
+		Platform:       bundle.SupportedPlatforms[0], // Use first platform
+		Version:        bundle.Version,
+		DownloadSize:   formatSize(bundle.DownloadSize),
+		InstallSize:    formatSize(bundle.InstallSize),
+		FileTree:       template.JS(fileTreeJSON),
+		LargestFiles:   largestFiles,
+		LargestModules: largestModules,
 	}
 
 	// Create a buffer to store the rendered template
