@@ -41,10 +41,10 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	var content strings.Builder
 
 	// Header
-	content.WriteString(fmt.Sprintf("# App Bundle Analysis: %s\n\n", bundle.AppName))
+	content.WriteString(fmt.Sprintf("# 📱 App Bundle Analysis: %s\n\n", bundle.AppName))
 
 	// Basic Information
-	content.WriteString("## Basic Information\n\n")
+	content.WriteString("## ℹ️ Basic Information\n\n")
 	content.WriteString("| Property | Value |\n")
 	content.WriteString("|----------|-------|\n")
 	content.WriteString(fmt.Sprintf("| Bundle ID | `%s` |\n", bundle.BundleID))
@@ -55,7 +55,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString(fmt.Sprintf("| Supported Platforms | %s |\n\n", strings.Join(bundle.SupportedPlatforms, ", ")))
 
 	// Top 10 Largest Modules
-	content.WriteString("## Top 10 Largest Modules\n\n")
+	content.WriteString("## 📦 Top 10 Largest Modules\n\n")
 	content.WriteString("| Module | Size | File Count | % of Total |\n")
 	content.WriteString("|--------|------|------------|------------|\n")
 
@@ -71,7 +71,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString("\n")
 
 	// Top 10 Largest Files
-	content.WriteString("## Top 10 Largest Files\n\n")
+	content.WriteString("## 📄 Top 10 Largest Files\n\n")
 	content.WriteString("| File | Size | % of Total |\n")
 	content.WriteString("|------|------|------------|\n")
 
@@ -148,7 +148,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	// Write combined duplicates table
 	if len(allDuplicates) > 0 {
-		content.WriteString("## Duplicate Content\n\n")
+		content.WriteString("## 🔄 Duplicate Content\n\n")
 		content.WriteString("| Name | Type | Size | Occurrences | Locations |\n")
 		content.WriteString("|------|------|------|-------------|------------|\n")
 
