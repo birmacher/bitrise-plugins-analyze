@@ -43,7 +43,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	// Header
 	content.WriteString(fmt.Sprintf("# 📱 App Bundle Analysis: %s\n\n", bundle.AppName))
 
-	// Basic Information
+	// Basic Information (not collapsible)
 	content.WriteString("## ℹ️ Basic Information\n\n")
 	content.WriteString("| Property | Value |\n")
 	content.WriteString("|----------|-------|\n")
@@ -56,10 +56,29 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	// Top 10 Largest Modules
 	content.WriteString("## 📦 Top 10 Largest Modules\n\n")
+	content.WriteString("<details>\n")
+
+	modules := findLargestModules(bundle.Files)
+
+	// Count modules (excluding root)
+	moduleCount := len(modules)
+	if moduleCount > 0 {
+		moduleCount-- // Subtract root module
+	}
+	if moduleCount > 10 {
+		moduleCount = 10
+	}
+
+	totalSize := int64(0)
+	for _, module := range modules[1:] {
+		totalSize += module.size
+	}
+
+	content.WriteString(fmt.Sprintf("<summary>Found %d modules totaling %s, click to expand</summary>\n\n",
+		moduleCount, formatSize(totalSize)))
 	content.WriteString("| Module | Size | File Count | % of Total |\n")
 	content.WriteString("|--------|------|------------|------------|\n")
 
-	modules := findLargestModules(bundle.Files)
 	// Skip the root module (index 0) and take up to 10 modules
 	endIndex := len(modules)
 	if endIndex > 11 { // 11 because we skip the first one
@@ -75,14 +94,28 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 				percentage))
 		}
 	}
-	content.WriteString("\n")
+	content.WriteString("\n</details>\n\n")
 
 	// Top 10 Largest Files
 	content.WriteString("## 📄 Top 10 Largest Files\n\n")
+	content.WriteString("<details>\n")
+
+	files := findLargestFiles(bundle.Files)
+	fileCount := len(files)
+	if fileCount > 10 {
+		fileCount = 10
+	}
+
+	totalFileSize := int64(0)
+	for i := 0; i < fileCount; i++ {
+		totalFileSize += files[i].size
+	}
+
+	content.WriteString(fmt.Sprintf("<summary>Found %d large files totaling %s, click to expand</summary>\n\n",
+		fileCount, formatSize(totalFileSize)))
 	content.WriteString("| File | Size | % of Total |\n")
 	content.WriteString("|------|------|------------|\n")
 
-	files := findLargestFiles(bundle.Files)
 	for i, file := range files {
 		if i >= 10 {
 			break
@@ -93,7 +126,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 			formatSize(file.size),
 			percentage))
 	}
-	content.WriteString("\n")
+	content.WriteString("\n</details>\n\n")
 
 	// Collect all duplicates
 	var allDuplicates []duplicateInfo
@@ -156,6 +189,16 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	// Write combined duplicates table
 	if len(allDuplicates) > 0 {
 		content.WriteString("## 🔄 Duplicate Content\n\n")
+		content.WriteString("<details>\n")
+
+		// Calculate total size of duplicates
+		totalDuplicateSize := int64(0)
+		for _, dup := range allDuplicates {
+			totalDuplicateSize += dup.size * int64(dup.occurrences-1) // Count only the duplicate space
+		}
+
+		content.WriteString(fmt.Sprintf("<summary>Found %d duplicated items wasting %s of space, click to expand</summary>\n\n",
+			len(allDuplicates), formatSize(totalDuplicateSize)))
 		content.WriteString("| Name | Type | Size | Occurrences | Locations |\n")
 		content.WriteString("|------|------|------|-------------|------------|\n")
 
@@ -172,7 +215,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 				dup.occurrences,
 				strings.Join(dup.locations, "<br>")))
 		}
-		content.WriteString("\n")
+		content.WriteString("\n</details>\n\n")
 	}
 
 	// Write the markdown file
