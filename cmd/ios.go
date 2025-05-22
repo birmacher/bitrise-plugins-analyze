@@ -3,7 +3,6 @@ package cmd
 import (
 	"archive/zip"
 	"bitrise-plugins-analyze/internal/analyzer"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -37,18 +36,7 @@ func analyzeAppBundle(bundle_path string) (*analyzer.AppBundle, error) {
 		return nil, err
 	}
 
-	bundleInfo, err := analyzer.AnalyzeAppBundle(app_path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to analyze file: %v", err)
-	}
-
-	jsonData, err := json.MarshalIndent(bundleInfo, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal file info: %v", err)
-	}
-	fmt.Println(string(jsonData))
-
-	return bundleInfo, nil
+	return analyzer.AnalyzeAppBundle(app_path)
 }
 
 func analyzeXcarchive(app_path string) (string, error) {

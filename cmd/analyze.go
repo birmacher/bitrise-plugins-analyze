@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"bitrise-plugins-analyze/internal/visualize"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,6 +21,7 @@ const (
 var (
 	generateHTML bool
 	outputDir    string
+	generateJSON bool
 )
 
 var annotateCmd = &cobra.Command{
@@ -55,23 +58,41 @@ var annotateCmd = &cobra.Command{
 			return err
 		}
 
-		if generateHTML {
-			// If output directory is not specified, use current working directory
-			if outputDir == "" {
-				outputDir, err = os.Getwd()
-				if err != nil {
-					return err
-				}
-			}
-
-			// Create output directory if it doesn't exist
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
+		// Handle output directory
+		if outputDir == "" {
+			outputDir, err = os.Getwd()
+			if err != nil {
 				return err
 			}
+		}
 
-			// Generate HTML in the specified directory
-			outputPath := filepath.Join(outputDir, "index.html")
-			err = visualize.GenerateHTML(bundle, outputPath)
+		// Create output directory if it doesn't exist
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
+			return err
+		}
+
+		if generateJSON {
+			// Create JSON file named after bundle ID
+			jsonFileName := fmt.Sprintf("%s.json", bundle.BundleID)
+			jsonPath := filepath.Join(outputDir, jsonFileName)
+
+			// Marshal the bundle with indentation for better readability
+			jsonData, err := json.MarshalIndent(bundle, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal bundle data: %v", err)
+			}
+
+			// Write JSON file
+			if err := os.WriteFile(jsonPath, jsonData, 0644); err != nil {
+				return fmt.Errorf("failed to write JSON file: %v", err)
+			}
+		}
+
+		if generateHTML {
+			// Generate HTML file named after bundle ID
+			htmlFileName := fmt.Sprintf("%s.html", bundle.BundleID)
+			htmlPath := filepath.Join(outputDir, htmlFileName)
+			err = visualize.GenerateHTML(bundle, htmlPath)
 			if err != nil {
 				return err
 			}
@@ -84,5 +105,6 @@ var annotateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(annotateCmd)
 	annotateCmd.Flags().BoolVar(&generateHTML, "html", false, "Generate HTML visualization")
-	annotateCmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory where the HTML report will be generated (default: current directory)")
+	annotateCmd.Flags().BoolVar(&generateJSON, "json", false, "Generate JSON output file")
+	annotateCmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory where the output files will be generated (default: current directory)")
 }
