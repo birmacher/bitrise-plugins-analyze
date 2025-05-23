@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -88,7 +89,75 @@ func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
 }
 
 func analyzeAab(aabPath string, tempDir string) (*AppBundle, error) {
-	// Similar to APK but handling AAB specific structure
-	// This would require bundletool to properly analyze
-	return nil, fmt.Errorf("AAB analysis not yet implemented")
+	// First, ensure bundletool is available
+	bundletoolPath, err := exec.LookPath("bundletool")
+	if err != nil {
+		return nil, fmt.Errorf("bundletool not found in PATH. Please install bundletool from https://github.com/google/bundletool")
+	}
+
+	// Create a debug keystore if it doesn't exist
+	keystorePath := filepath.Join(tempDir, "debug.keystore")
+	if err := createDebugKeystore(keystorePath); err != nil {
+		return nil, fmt.Errorf("failed to create debug keystore: %v", err)
+	}
+
+	// Convert AAB to universal APK
+	universalApkPath := filepath.Join(tempDir, "universal.apk")
+	if err := generateUniversalApk(bundletoolPath, aabPath, universalApkPath, keystorePath); err != nil {
+		return nil, fmt.Errorf("failed to generate universal APK: %v", err)
+	}
+
+	// Now analyze the universal APK
+	return analyzeApk(universalApkPath, tempDir)
+}
+
+func createDebugKeystore(keystorePath string) error {
+	// Create a debug keystore for signing
+	cmd := exec.Command("keytool", "-genkeypair",
+		"-keystore", keystorePath,
+		"-alias", "debug",
+		"-keyalg", "RSA",
+		"-keysize", "2048",
+		"-validity", "10000",
+		"-dname", "CN=Debug,OU=Development,O=Bitrise,L=Debug,S=Debug,C=US",
+		"-storepass", "android",
+		"-keypass", "android")
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to create debug keystore: %v", err)
+	}
+
+	return nil
+}
+
+func generateUniversalApk(bundletoolPath, aabPath, outputPath, keystorePath string) error {
+	// Generate universal APK from AAB
+	cmd := exec.Command(bundletoolPath,
+		"build-apks",
+		"--bundle="+aabPath,
+		"--output="+outputPath+".apks",
+		"--mode=universal",
+		"--ks="+keystorePath,
+		"--ks-pass=pass:android",
+		"--ks-key-alias=debug",
+		"--key-pass=pass:android")
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to generate universal APK: %v", err)
+	}
+
+	// Extract the universal.apk from the .apks file (it's just a zip)
+	cmd = exec.Command("unzip", "-p", outputPath+".apks", "universal.apk")
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %v", err)
+	}
+	defer outFile.Close()
+
+	cmd.Stdout = outFile
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to extract universal APK: %v", err)
+	}
+
+	return nil
 }
