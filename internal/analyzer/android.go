@@ -26,36 +26,28 @@ func analyzeAndroidBundle(bundle_path string) (*AppBundle, error) {
 }
 
 func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
-	// export APK with apktool to tempDir
-	apktoolPath, err := exec.LookPath("apktool")
-	if err != nil {
-		return nil, fmt.Errorf("apktool not found in PATH: %v", err)
-	}
-
-	// Create a container directory for the APK
-	// Get the ApKPath file name without extension
-	apkFileName := filepath.Base(apkPath)
-	apkFileNameWithoutExt := apkFileName[:len(apkFileName)-len(filepath.Ext(apkFileName))]
-	apkContainerDir := filepath.Join(tempDir, "apktool-"+apkFileNameWithoutExt)
-	if err := os.MkdirAll(apkContainerDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create APK container directory: %v", err)
-	}
-
-	cmd := exec.Command(apktoolPath, "d", apkPath, "-o", apkContainerDir, "--force")
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("failed to run apktool: %v", err)
-	}
 
 	// Read APK manifest and create bundle info
 	bundle := &AppBundle{}
 
-	err = readAPKManifestFile(apkContainerDir, bundle)
+	// Manifest
+	readableApkPath, err := generateReadableApk(apkPath, tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate APK for reading AndroidManifest: %v", err)
+	}
+
+	err = readAPKManifestFile(readableApkPath, bundle)
 	if err != nil {
 		return nil, err
 	}
 
-	// Analyze the files in the bundle
-	files, err := AnalyzeFile(apkContainerDir, apkContainerDir)
+	// Filesystem
+	apkUnzipDir, err := unzipApk(apkPath, tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unzip APK: %v", err)
+	}
+	// Analyze the APK files
+	files, err := AnalyzeFile(apkUnzipDir, apkUnzipDir)
 	if err != nil {
 		return nil, err
 	}
@@ -164,4 +156,52 @@ func generateUniversalApk(aabPath, outputPath, keystorePath string) error {
 	}
 
 	return nil
+}
+
+func generateReadableApk(apkPath, tempDir string) (string, error) {
+	// export APK with apktool to tempDir
+	apktoolPath, err := exec.LookPath("apktool")
+	if err != nil {
+		return "", fmt.Errorf("apktool not found in PATH: %v", err)
+	}
+
+	// Create a container directory for the APK
+	// Get the ApKPath file name without extension
+	apkFileName := filepath.Base(apkPath)
+	apkFileNameWithoutExt := apkFileName[:len(apkFileName)-len(filepath.Ext(apkFileName))]
+	apkContainerDir := filepath.Join(tempDir, "apktool-"+apkFileNameWithoutExt)
+	if err := os.MkdirAll(apkContainerDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create APK container directory: %v", err)
+	}
+
+	cmd := exec.Command(apktoolPath, "d", apkPath, "-o", apkContainerDir, "--force")
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to run apktool: %v", err)
+	}
+
+	return apkContainerDir, nil
+}
+
+func unzipApk(apkPath, tempDir string) (string, error) {
+	// Create a container directory for the APK
+	apkFileName := filepath.Base(apkPath)
+	apkFileNameWithoutExt := apkFileName[:len(apkFileName)-len(filepath.Ext(apkFileName))]
+	apkContainerDir := filepath.Join(tempDir, "unzip-"+apkFileNameWithoutExt)
+	if err := os.MkdirAll(apkContainerDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create APK container directory: %v", err)
+	}
+
+	// Check if unzip is available
+	unzipPath, err := exec.LookPath("unzip")
+	if err != nil {
+		return "", fmt.Errorf("unzip not found in PATH: %v", err)
+	}
+
+	// Unzip the APK
+	cmd := exec.Command(unzipPath, apkPath, "-d", apkContainerDir)
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to unzip APK: %v", err)
+	}
+
+	return apkContainerDir, nil
 }
