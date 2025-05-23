@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"bitrise-plugins-analyze/internal/analyzer"
 )
@@ -93,7 +94,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		Title:          "App Bundle Analysis",
 		AppName:        appName,
 		BundleID:       bundle.BundleID,
-		Platform:       bundle.SupportedPlatforms[0], // Use first platform
+		Platform:       strings.Join(bundle.SupportedPlatforms, ", "),
 		Version:        bundle.Version,
 		DownloadSize:   formatSize(bundle.DownloadSize),
 		InstallSize:    formatSize(bundle.InstallSize),

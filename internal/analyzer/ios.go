@@ -1,9 +1,7 @@
 package analyzer
 
 import (
-	"archive/zip"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,51 +42,9 @@ func analyzeXcarchive(app_path string) (string, error) {
 }
 
 func analyzeIpa(app_path string) (string, string, error) {
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "ipa-*")
+	tempDir, err := unzip(app_path)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create temp directory: %v", err)
-	}
-
-	// Open the IPA file
-	reader, err := zip.OpenReader(app_path)
-	if err != nil {
-		return "", tempDir, fmt.Errorf("failed to open IPA file: %v", err)
-	}
-	defer reader.Close()
-
-	// Extract all files to temp directory
-	for _, file := range reader.File {
-		filePath := filepath.Join(tempDir, file.Name)
-
-		if file.FileInfo().IsDir() {
-			os.MkdirAll(filePath, os.ModePerm)
-			continue
-		}
-
-		if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-			return "", tempDir, fmt.Errorf("failed to create directory: %v", err)
-		}
-
-		dstFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-		if err != nil {
-			return "", tempDir, fmt.Errorf("failed to create file: %v", err)
-		}
-
-		srcFile, err := file.Open()
-		if err != nil {
-			dstFile.Close()
-			return "", tempDir, fmt.Errorf("failed to open zip file: %v", err)
-		}
-
-		if _, err := io.Copy(dstFile, srcFile); err != nil {
-			srcFile.Close()
-			dstFile.Close()
-			return "", tempDir, fmt.Errorf("failed to extract file: %v", err)
-		}
-
-		srcFile.Close()
-		dstFile.Close()
+		return "", "", fmt.Errorf("failed to unzip IPA: %v", err)
 	}
 
 	// Find the .app file in Payload directory
