@@ -1,9 +1,7 @@
 package analyzer
 
 import (
-	"archive/zip"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,54 +26,36 @@ func analyzeAndroidBundle(bundle_path string) (*AppBundle, error) {
 }
 
 func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
-	// Open and extract APK (it's a ZIP file)
-	reader, err := zip.OpenReader(apkPath)
+	// export APK with apktool to tempDir
+	apktoolPath, err := exec.LookPath("apktool")
 	if err != nil {
-		return nil, fmt.Errorf("failed to open APK: %v", err)
-	}
-	defer reader.Close()
-
-	// Extract APK contents
-	for _, file := range reader.File {
-		// Skip directories
-		if file.FileInfo().IsDir() {
-			continue
-		}
-
-		// Create containing directory if it doesn't exist
-		outPath := filepath.Join(tempDir, file.Name)
-		if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
-			return nil, err
-		}
-
-		// Extract file
-		outFile, err := os.Create(outPath)
-		if err != nil {
-			return nil, err
-		}
-
-		rc, err := file.Open()
-		if err != nil {
-			outFile.Close()
-			return nil, err
-		}
-
-		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
-		if err != nil {
-			return nil, err
-		}
+		return nil, fmt.Errorf("apktool not found in PATH: %v", err)
 	}
 
-	// Create AppBundle with basic info
-	bundle := &AppBundle{
-		AppName:            filepath.Base(apkPath),
-		SupportedPlatforms: []string{"Android"},
+	// Create a container directory for the APK
+	// Get the ApKPath file name without extension
+	apkFileName := filepath.Base(apkPath)
+	apkFileNameWithoutExt := apkFileName[:len(apkFileName)-len(filepath.Ext(apkFileName))]
+	apkContainerDir := filepath.Join(tempDir, "apktool-"+apkFileNameWithoutExt)
+	if err := os.MkdirAll(apkContainerDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create APK container directory: %v", err)
+	}
+
+	cmd := exec.Command(apktoolPath, "d", apkPath, "-o", apkContainerDir, "--force")
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("failed to run apktool: %v", err)
+	}
+
+	// Read APK manifest and create bundle info
+	bundle := &AppBundle{}
+
+	err = readAPKManifestFile(apkContainerDir, bundle)
+	if err != nil {
+		return nil, err
 	}
 
 	// Analyze the files in the bundle
-	files, err := AnalyzeFile(tempDir, tempDir)
+	files, err := AnalyzeFile(apkContainerDir, apkContainerDir)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +63,13 @@ func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
 
 	// Calculate sizes
 	bundle.InstallSize = files.Size
-	bundle.DownloadSize = files.Size // For APK, download size is the same as file size
+
+	// Get the original APK file size for download size
+	apkInfo, err := os.Stat(apkPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get APK file size: %v", err)
+	}
+	bundle.DownloadSize = apkInfo.Size()
 
 	return bundle, nil
 }
@@ -119,6 +105,30 @@ func createDebugKeystore(keystorePath string) error {
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to create debug keystore: %v", err)
+	}
+
+	return nil
+}
+
+func readAPKManifestFile(apkContainerDir string, bundle *AppBundle) error {
+	// Parse AndroidManifest.xml
+	manifestPath := filepath.Join(apkContainerDir, "AndroidManifest.xml")
+	manifest, err := parseAndroidManifest(manifestPath)
+	if err != nil {
+		return fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
+	}
+
+	fmt.Println("Manifest info:", manifest)
+
+	// Update bundle with manifest info
+	bundle.AppName = manifest.Application.Label
+	bundle.BundleID = manifest.Package
+	bundle.Version = manifest.VersionName
+	bundle.SupportedPlatforms = []string{"Android"}
+
+	// If app name wasn't in manifest, use file name
+	if bundle.AppName == "" {
+		bundle.AppName = filepath.Base(apkContainerDir)
 	}
 
 	return nil
