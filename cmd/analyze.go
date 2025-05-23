@@ -1,18 +1,13 @@
 package cmd
 
 import (
+	"bitrise-plugins-analyze/internal/analyzer"
 	"bitrise-plugins-analyze/internal/visualize"
 	"errors"
 	"io"
 	"os"
 
 	"github.com/spf13/cobra"
-)
-
-const (
-	AppExtension       = ".app"
-	IpaExtension       = ".ipa"
-	XcarchiveExtension = ".xcarchive"
 )
 
 var (
@@ -51,7 +46,7 @@ var annotateCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		bundle, err := analyzeAppBundle(app_path)
+		bundle, err := analyzer.AnalyzeBundlePath(app_path)
 		if err != nil {
 			return err
 		}

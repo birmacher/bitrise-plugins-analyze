@@ -1,8 +1,7 @@
-package cmd
+package analyzer
 
 import (
 	"archive/zip"
-	"bitrise-plugins-analyze/internal/analyzer"
 	"fmt"
 	"io"
 	"os"
@@ -10,7 +9,7 @@ import (
 	"strings"
 )
 
-func analyzeAppBundle(bundle_path string) (*analyzer.AppBundle, error) {
+func analyzeIOSBundle(bundle_path string) (*AppBundle, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var app_path string
@@ -36,7 +35,7 @@ func analyzeAppBundle(bundle_path string) (*analyzer.AppBundle, error) {
 		return nil, err
 	}
 
-	return analyzer.AnalyzeAppBundle(app_path)
+	return AnalyzeAppBundle(app_path)
 }
 
 func analyzeXcarchive(app_path string) (string, error) {
