@@ -27,9 +27,19 @@ func analyzeAndroidBundle(bundle_path string) (*AppBundle, error) {
 }
 
 func analyzeApk(apkPath string) (*AppBundle, error) {
-	// TODO: Remoe readableAPK and just use apkanalyzer on the bynaryXML
-	// Read APK manifest and create bundle info
+	// Create bundle info
 	bundle := &AppBundle{}
+
+	// Parse AndroidManifest.xml using apkanalyzer
+	manifest, err := parseAndroidManifest(apkPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
+	}
+
+	// Set bundle metadata from manifest
+	bundle.AppName = "Todo"
+	bundle.BundleID = manifest.Package
+	bundle.Version = manifest.VersionName + " (" + manifest.VersionCode + ")"
 
 	apkTempDir, err := unzip(apkPath)
 	if err != nil {
