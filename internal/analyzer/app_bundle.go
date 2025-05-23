@@ -21,6 +21,7 @@ type AppBundle struct {
 	Files              FileInfo      `json:"files"`
 	CarFiles           []CarFileInfo `json:"car_files,omitempty"`
 	MachOFiles         []MachOInfo   `json:"mach_o_files,omitempty"`
+	DexPackages        []DexPackage  `json:"dex_files,omitempty"`
 }
 
 // AnalyzeAppBundle analyzes the provided app bundle directory and returns the analysis results

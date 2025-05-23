@@ -26,11 +26,10 @@ func analyzeAndroidBundle(bundle_path string) (*AppBundle, error) {
 }
 
 func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
-
+	// TODO: Remoe readableAPK and just use apkanalyzer on the bynaryXML
 	// Read APK manifest and create bundle info
 	bundle := &AppBundle{}
 
-	// Manifest
 	readableApkPath, err := generateReadableApk(apkPath, tempDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate APK for reading AndroidManifest: %v", err)
@@ -41,17 +40,29 @@ func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
 		return nil, err
 	}
 
-	// Filesystem
+	// Unzip the APK to analyze its contents
 	apkUnzipDir, err := unzipApk(apkPath, tempDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unzip APK: %v", err)
 	}
+
 	// Analyze the APK files
 	files, err := AnalyzeFile(apkUnzipDir, apkUnzipDir)
 	if err != nil {
 		return nil, err
 	}
 	bundle.Files = files
+
+	// Analyze DEX files
+	// TODO: Export DEX files to file structure under the unzipped APK
+	// Only after run analyzeFile as it will correctly setup the file structure
+	dexPackages, err := analyzeDexFiles(apkPath, tempDir)
+	if err != nil {
+		// Log the error but don't fail the analysis
+		fmt.Printf("Warning: failed to analyze DEX files: %v\n", err)
+	} else {
+		bundle.DexPackages = dexPackages
+	}
 
 	// Calculate sizes
 	bundle.InstallSize = files.Size
