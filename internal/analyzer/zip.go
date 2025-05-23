@@ -9,9 +9,7 @@ import (
 )
 
 func unzip(zip_path string) (string, error) {
-	fmt.Printf("Unzipping %s\n", zip_path)
 	tempDir, err := os.MkdirTemp("", "*")
-	fmt.Printf("Unzipping to %s\n", tempDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp directory: %v", err)
 	}
@@ -52,7 +50,6 @@ func unzip(zip_path string) (string, error) {
 			dstFile.Close()
 			return "", fmt.Errorf("failed to extract file: %v", err)
 		}
-		fmt.Printf("Extracted %s\n", filePath)
 
 		srcFile.Close()
 		dstFile.Close()

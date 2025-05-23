@@ -129,23 +129,5 @@ func generateUniversalApk(aabPath, outputPath, keystorePath string) (string, err
 	if err != nil {
 		return "", fmt.Errorf("failed to unzip .apks file: %v", err)
 	}
-	fmt.Println("APK Path ->", apkPath)
 	return filepath.Join(apkPath, "universal.apk"), nil
-	// if err != nil {
-	// 	return fmt.Errorf("failed to unzip .apks file: %v", err)
-	// }
-	// // Extract the universal.apk from the .apks file (it's just a zip)
-	// cmd = exec.Command("unzip", "-p", outputPath+".apks", "universal.apk")
-	// outFile, err := os.Create(outputPath)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to create output file: %v", err)
-	// }
-	// defer outFile.Close()
-
-	// cmd.Stdout = outFile
-	// if err := cmd.Run(); err != nil {
-	// 	return fmt.Errorf("failed to extract universal APK: %v", err)
-	// }
-
-	// return nil
 }
