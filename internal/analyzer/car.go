@@ -42,6 +42,7 @@ type AssetsutilCatalog struct {
 	SHA1Digest    string `json:"SHA1Digest"`
 }
 
+// TODO: Add "Other" for the remaining size
 // ParseCARFile uses assetutil to analyze the .car file and returns structured information
 func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 	// Check if assetutil exists

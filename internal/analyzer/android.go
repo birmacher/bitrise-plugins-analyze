@@ -41,13 +41,13 @@ func analyzeApk(apkPath string) (*AppBundle, error) {
 	bundle.BundleID = manifest.Package
 	bundle.Version = manifest.VersionName + " (" + manifest.VersionCode + ")"
 
-	apkTempDir, err := unzip(apkPath)
+	unzipedApkDir, err := unzip(apkPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unzip APK: %v", err)
 	}
 
 	// Analyze the APK files
-	files, err := AnalyzeFile(apkTempDir, apkTempDir)
+	files, err := AnalyzeFile(unzipedApkDir, unzipedApkDir)
 	if err != nil {
 		return nil, err
 	}
@@ -56,13 +56,13 @@ func analyzeApk(apkPath string) (*AppBundle, error) {
 	// Analyze DEX files
 	// TODO: Export DEX files to file structure under the unzipped APK
 	// Only after run analyzeFile as it will correctly setup the file structure
-	// dexPackages, err := analyzeDexFiles(apkPath, tempDir)
-	// if err != nil {
-	// 	// Log the error but don't fail the analysis
-	// 	fmt.Printf("Warning: failed to analyze DEX files: %v\n", err)
-	// } else {
-	// 	bundle.DexPackages = dexPackages
-	// }
+	dexPackages, err := analyzeDexFiles(unzipedApkDir)
+	if err != nil {
+		// Log the error but don't fail the analysis
+		fmt.Printf("Warning: failed to analyze DEX files: %v\n", err)
+	} else {
+		bundle.DexPackages = dexPackages
+	}
 
 	// Calculate sizes
 	bundle.InstallSize = files.Size
