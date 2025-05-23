@@ -89,12 +89,6 @@ func analyzeApk(apkPath string, tempDir string) (*AppBundle, error) {
 }
 
 func analyzeAab(aabPath string, tempDir string) (*AppBundle, error) {
-	// First, ensure bundletool is available
-	bundletoolPath, err := exec.LookPath("bundletool")
-	if err != nil {
-		return nil, fmt.Errorf("bundletool not found in PATH. Please install bundletool from https://github.com/google/bundletool")
-	}
-
 	// Create a debug keystore if it doesn't exist
 	keystorePath := filepath.Join(tempDir, "debug.keystore")
 	if err := createDebugKeystore(keystorePath); err != nil {
@@ -103,7 +97,7 @@ func analyzeAab(aabPath string, tempDir string) (*AppBundle, error) {
 
 	// Convert AAB to universal APK
 	universalApkPath := filepath.Join(tempDir, "universal.apk")
-	if err := generateUniversalApk(bundletoolPath, aabPath, universalApkPath, keystorePath); err != nil {
+	if err := generateUniversalApk(aabPath, universalApkPath, keystorePath); err != nil {
 		return nil, fmt.Errorf("failed to generate universal APK: %v", err)
 	}
 
@@ -130,9 +124,9 @@ func createDebugKeystore(keystorePath string) error {
 	return nil
 }
 
-func generateUniversalApk(bundletoolPath, aabPath, outputPath, keystorePath string) error {
+func generateUniversalApk(aabPath, outputPath, keystorePath string) error {
 	// Generate universal APK from AAB
-	cmd := exec.Command(bundletoolPath,
+	cmd := exec.Command("bundletool",
 		"build-apks",
 		"--bundle="+aabPath,
 		"--output="+outputPath+".apks",
