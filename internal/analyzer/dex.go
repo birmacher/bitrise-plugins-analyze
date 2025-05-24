@@ -9,8 +9,9 @@ import (
 )
 
 type DexClass struct {
-	Name string `json:"name"`
-	Size int64  `json:"size"`
+	Name   string `json:"name"`
+	Size   int64  `json:"size"`
+	Shasum string `json:"shasum"`
 }
 
 type DexPackage struct {
@@ -116,6 +117,10 @@ func analyzeDecompiledCode(decompiledCodeDir string) ([]DexPackage, error) {
 		packagePath := filepath.Dir(classPath)
 		className := strings.TrimSuffix(filepath.Base(classPath), ".java")
 		size := info.Size()
+		checksum, err := calculateSHA256(path)
+		if err != nil {
+			return fmt.Errorf("failed to calculate SHA256 for %s: %v", path, err)
+		}
 		fmt.Println("Package:", packagePath, "class:", className, "size:", size)
 
 		// Try to find the package in the slice
@@ -138,8 +143,9 @@ func analyzeDecompiledCode(decompiledCodeDir string) ([]DexPackage, error) {
 
 		// Add the class to the package via slice index
 		dexPackages[pkgIdx].Classes = append(dexPackages[pkgIdx].Classes, DexClass{
-			Name: className,
-			Size: size,
+			Name:   className,
+			Size:   size,
+			Shasum: checksum,
 		})
 		dexPackages[pkgIdx].Size += size
 
