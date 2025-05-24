@@ -84,13 +84,7 @@ func analyzeDexFile(dexPath string) ([]DexPackage, error) {
 }
 
 func generateDecompiledCode(dexFilePath string) (string, error) {
-	fmt.Println("Generating decompiled code for DEX file:", dexFilePath)
 	// Check if jadx is available
-	jadxPath, err := exec.LookPath("jadx")
-	if err != nil {
-		return "", fmt.Errorf("jadx not found in PATH: %v", err)
-	}
-
 	tempDir, err := os.MkdirTemp("", "*")
 
 	if err != nil {
@@ -98,15 +92,16 @@ func generateDecompiledCode(dexFilePath string) (string, error) {
 	}
 
 	// Run jadx to decompile the APK
-	cmd := exec.Command(jadxPath,
+	cmd := exec.Command("jadx",
 		"--no-res", // Skip resources
 		"--output-dir", tempDir,
 		dexFilePath)
 
-	output, err := cmd.CombinedOutput()
-	fmt.Printf("jadx output: %s\n", string(output))
+	err = cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("failed to run jadx: %v", err)
+		// Skip this error as most of the time jadx will fail to decompile some classes
+		// but we still want to analyze the rest of the classes
+		fmt.Println("Some error returned, but continuing for:", dexFilePath)
 	}
 
 	return tempDir, nil
