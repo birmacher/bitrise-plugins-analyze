@@ -15,9 +15,10 @@ type DexClass struct {
 }
 
 type DexPackage struct {
-	Name    string     `json:"name"`
-	Size    int64      `json:"size"`
-	Classes []DexClass `json:"classes"`
+	DexFilePath string     `json:"dex_file_path"`
+	Name        string     `json:"name"`
+	Size        int64      `json:"size"`
+	Classes     []DexClass `json:"classes"`
 }
 
 func generateDecompiledCode(dexFilePath string) (string, error) {
@@ -60,23 +61,56 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 
 		// Find any *.dex file
 		if filepath.Ext(path) == ".dex" {
-			// Call generateDecompiledCode on each dex file
-			decompiledCodeDir, err := generateDecompiledCode(path)
+			// check dex file with dex_py
+			dexFiles, err := AnalyzeDex(path)
 			if err != nil {
 				// Log the error but continue with other dex files
-				fmt.Printf("Failed to decompile DEX file %s: %v\n", path, err)
+				fmt.Printf("Failed to analyze DEX file %s: %v\n", path, err)
 				return nil
 			}
+			// fmt.Printf("Analyzed DEX file %s: %v\n", path, dexFiles)
+
+			// Go through the analyzed dex files and create DexPackage objects
+			for classes, size := range dexFiles {
+				packageName := strings.TrimPrefix(filepath.Dir(classes), "L")
+				className := strings.TrimSuffix(filepath.Base(classes), ";")
+
+				// Skip classnames that include "$" as they are inner classes
+				if strings.Contains(className, "$") {
+					continue
+				}
+
+				relPath, err := filepath.Rel(unzipedApkDir, path)
+				if err != nil {
+					return fmt.Errorf("failed to get relative path: %v", err)
+				}
+				packagePath := filepath.Join(relPath, packageName)
+
+				fmt.Printf("Package: %s, Class: %s, Size: %d\n", packagePath, className, size)
+			}
+
+			// // Call generateDecompiledCode on each dex file
+			// decompiledCodeDir, err := generateDecompiledCode(path)
+			// if err != nil {
+			// 	// Log the error but continue with other dex files
+			// 	fmt.Printf("Failed to decompile DEX file %s: %v\n", path, err)
+			// 	return nil
+			// }
+
+			// relPath, err := filepath.Rel(unzipedApkDir, path)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to get relative path: %v", err)
+			// }
 
 			// // Analyze the decompiled code and get packages
-			packages, err := analyzeDecompiledCode(decompiledCodeDir)
-			if err != nil {
-				fmt.Printf("Warning: failed to analyze decompiled code for %s: %v\n", path, err)
-				return nil
-			}
+			// packages, err := analyzeDecompiledCode(decompiledCodeDir, relPath)
+			// if err != nil {
+			// 	fmt.Printf("Warning: failed to analyze decompiled code for %s: %v\n", path, err)
+			// 	return nil
+			// }
 
-			// Merge packages with existing results
-			allPackages = append(allPackages, packages...)
+			// // Merge packages with existing results
+			// allPackages = append(allPackages, packages...)
 		}
 
 		return nil
@@ -89,7 +123,7 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 	return allPackages, nil
 }
 
-func analyzeDecompiledCode(decompiledCodeDir string) ([]DexPackage, error) {
+func analyzeDecompiledCode(decompiledCodeDir, dexFilePath string) ([]DexPackage, error) {
 	dexPackages := []DexPackage{}
 
 	// Check if the sources directory exists
@@ -121,7 +155,6 @@ func analyzeDecompiledCode(decompiledCodeDir string) ([]DexPackage, error) {
 		if err != nil {
 			return fmt.Errorf("failed to calculate SHA256 for %s: %v", path, err)
 		}
-		fmt.Println("Package:", packagePath, "class:", className, "size:", size)
 
 		// Try to find the package in the slice
 		var pkgIdx int = -1
@@ -134,9 +167,10 @@ func analyzeDecompiledCode(decompiledCodeDir string) ([]DexPackage, error) {
 		if pkgIdx == -1 {
 			// Not found, create a new one and append
 			dexPackages = append(dexPackages, DexPackage{
-				Name:    packagePath,
-				Size:    0,
-				Classes: make([]DexClass, 0),
+				DexFilePath: dexFilePath,
+				Name:        packagePath,
+				Size:        0,
+				Classes:     make([]DexClass, 0),
 			})
 			pkgIdx = len(dexPackages) - 1
 		}
@@ -159,60 +193,12 @@ func analyzeDecompiledCode(decompiledCodeDir string) ([]DexPackage, error) {
 	return dexPackages, nil
 }
 
-// // Helper function to add a class to the package tree
-// func addClassToPackageTree(packages *[]DexPackage, packagePath, className string, size int64) {
-// 	// Handle empty package (default package)
-// 	if packagePath == "." {
-// 		packagePath = "default"
-// 	}
+func (dexPackage DexPackage) GetPath() string {
+	return filepath.Join(dexPackage.DexFilePath, dexPackage.Name)
 
-// 	// Split the package path into components
-// 	components := strings.Split(packagePath, ".")
+}
 
-// 	// Start at the root level
-// 	currentLevel := packages
-// 	var currentPath string
+func (dexClass DexClass) GetPath(dexPackage DexPackage) string {
+	return filepath.Join(dexPackage.GetPath(), dexClass.Name)
 
-// 	// Navigate through the package hierarchy
-// 	for i, component := range components {
-// 		if currentPath == "" {
-// 			currentPath = component
-// 		} else {
-// 			currentPath = currentPath + "." + component
-// 		}
-
-// 		// Find or create the package at this level
-// 		var pkg *DexPackage
-// 		for i := range *currentLevel {
-// 			if (*currentLevel)[i].Name == currentPath {
-// 				pkg = &(*currentLevel)[i]
-// 				break
-// 			}
-// 		}
-
-// 		// Create new package if not found
-// 		if pkg == nil {
-// 			*currentLevel = append(*currentLevel, DexPackage{
-// 				Name:     currentPath,
-// 				Size:     0,
-// 				Classes:  make([]DexClass, 0),
-// 				Children: make([]DexPackage, 0),
-// 			})
-// 			pkg = &(*currentLevel)[len(*currentLevel)-1]
-// 		}
-
-// 		// Add the class size to this package level
-// 		pkg.Size += size
-
-// 		// If this is the last component, add the class to this package
-// 		if i == len(components)-1 {
-// 			pkg.Classes = append(pkg.Classes, DexClass{
-// 				Name: className,
-// 				Size: size,
-// 			})
-// 		}
-
-// 		// Move to the next level in the hierarchy
-// 		currentLevel = &pkg.Children
-// 	}
-// }
+}

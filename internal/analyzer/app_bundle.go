@@ -158,5 +158,35 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 		findAndAddAssets(&extendedFiles)
 	}
 
+	// For each DEX file, find matching file in extendedFiles and add asset info as children
+	for _, dexPackage := range bundle.DexPackages {
+		// Find matching file path in extendedFiles tree
+		var findAndAddDexClasses func(files *FileInfo) bool
+		findAndAddDexClasses = func(files *FileInfo) bool {
+			if files.RelativePath == dexPackage.DexFilePath {
+				// Add each class as a child
+				for _, class := range dexPackage.Classes {
+					classInfo := FileInfo{
+						RelativePath: class.GetPath(dexPackage),
+						Type:         "dex",
+						Size:         class.Size,
+						Shasum:       class.Shasum,
+					}
+					files.Children = append(files.Children, classInfo)
+					files.Size += class.Size
+				}
+				return true
+			}
+			// Recursively search children
+			for i := range files.Children {
+				if findAndAddDexClasses(&files.Children[i]) {
+					return true
+				}
+			}
+			return false
+		}
+		findAndAddDexClasses(&extendedFiles)
+	}
+
 	return extendedFiles, nil
 }
