@@ -164,10 +164,9 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 		findAndAddDexPackage = func(files *FileInfo) bool {
 			if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
 				relativePath := strings.TrimPrefix(dexPackage.Name, files.RelativePath+"/")
-				packageName := strings.ReplaceAll(relativePath, "/", ".")
 				// Create a directory node for the DEX package
 				dexPackageDir := FileInfo{
-					RelativePath: filepath.Join(dexPackage.Name, packageName),
+					RelativePath: filepath.Join(dexPackage.Name, relativePath),
 					Type:         "dex_package",
 					Size:         dexPackage.Size,
 					Children:     make([]FileInfo, 0),

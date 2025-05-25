@@ -76,7 +76,7 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 }
 
 func addClassToPackage(dexPackages *[]DexPackage, dexFilePath string, packageName, className string, size int64) {
-	packagePath := filepath.Join(dexFilePath, packageName)
+	packagePath := filepath.Join(dexFilePath, strings.ReplaceAll(packageName, "/", "."))
 
 	var pkgIdx int = -1
 	for i := range *dexPackages {
