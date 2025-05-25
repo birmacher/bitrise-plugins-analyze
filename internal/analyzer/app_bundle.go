@@ -158,34 +158,34 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 		findAndAddAssets(&extendedFiles)
 	}
 
-	// For each DEX file, find matching file in extendedFiles and add asset info as children
 	for _, dexPackage := range bundle.DexPackages {
-		// Find matching file path in extendedFiles tree
-		var findAndAddDexClasses func(files *FileInfo) bool
-		findAndAddDexClasses = func(files *FileInfo) bool {
-			if files.RelativePath == dexPackage.DexFilePath {
-				// Add each class as a child
-				for _, class := range dexPackage.Classes {
-					classInfo := FileInfo{
-						RelativePath: class.GetPath(dexPackage),
-						Type:         "dex",
-						Size:         class.Size,
-						Shasum:       class.Shasum,
-					}
-					files.Children = append(files.Children, classInfo)
-					files.Size += class.Size
+		// create file hierarchy for DEX packages
+		var findAndAddDexPackage func(files *FileInfo) bool
+		findAndAddDexPackage = func(files *FileInfo) bool {
+			if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
+				relativePath := strings.TrimPrefix(dexPackage.Name, files.RelativePath+"/")
+				packageName := strings.ReplaceAll(relativePath, "/", ".")
+				// Create a directory node for the DEX package
+				dexPackageDir := FileInfo{
+					RelativePath: filepath.Join(dexPackage.Name, packageName),
+					Type:         "dex_package",
+					Size:         dexPackage.Size,
+					Children:     make([]FileInfo, 0),
 				}
+				// Add the DEX package directory to the current file node
+				files.Children = append(files.Children, dexPackageDir)
+
 				return true
 			}
 			// Recursively search children
 			for i := range files.Children {
-				if findAndAddDexClasses(&files.Children[i]) {
+				if findAndAddDexPackage(&files.Children[i]) {
 					return true
 				}
 			}
 			return false
 		}
-		findAndAddDexClasses(&extendedFiles)
+		findAndAddDexPackage(&extendedFiles)
 	}
 
 	return extendedFiles, nil

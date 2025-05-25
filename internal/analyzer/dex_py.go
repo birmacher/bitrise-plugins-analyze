@@ -64,7 +64,7 @@ func AnalyzeDex(dexPath string) (map[string]int, error) {
 	// Run the script using the venv Python
 	cmd = exec.Command(pythonBin, pyFile, dexPath)
 	out, err = cmd.CombinedOutput()
-	fmt.Printf("Python script output:\n%s\n", out)
+
 	if err != nil {
 		return nil, fmt.Errorf("python failed: %w\nOutput: %s", err, out)
 	}
