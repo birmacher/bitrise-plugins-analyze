@@ -163,16 +163,6 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 		var findAndAddDexPackage func(files *FileInfo) bool
 		findAndAddDexPackage = func(files *FileInfo) bool {
 			if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
-				// relativePath := strings.TrimPrefix(dexPackage.Name, files.RelativePath+"/")
-				// // Create a directory node for the DEX package
-				// dexPackageDir := FileInfo{
-				// 	RelativePath: filepath.Join(dexPackage.Name, relativePath),
-				// 	Type:         "dex_package",
-				// 	Size:         dexPackage.Size,
-				// 	Children:     make([]FileInfo, 0),
-				// }
-				// // Add the DEX package directory to the current file node
-				// files.Children = append(files.Children, dexPackageDir)
 				createFileStructureForPackage(files, dexPackage, files.RelativePath)
 
 				return true
@@ -209,13 +199,12 @@ func createFileStructureForPackage(files *FileInfo, dexPackage DexPackage, dexFi
 		}
 
 		// not found, create a new child
-		parent.Children = append(files.Children, FileInfo{
+		parent.Children = append(parent.Children, FileInfo{
 			RelativePath: relativePath,
 			Type:         "directory",
 			Children:     make([]FileInfo, 0),
 		})
-		parent = &parent.Children[len(parent.Children)-1] // Update parent to the newly created directory
-		fmt.Println("Created directory:", parent.RelativePath)
+		parent = &parent.Children[len(parent.Children)-1]
 	}
 
 	parent.Children = append(parent.Children, FileInfo{
@@ -224,6 +213,5 @@ func createFileStructureForPackage(files *FileInfo, dexPackage DexPackage, dexFi
 		Size:         dexPackage.Size,
 		Children:     make([]FileInfo, 0),
 	})
-	fmt.Println("Created package:", filepath.Join(parent.RelativePath, dexPackage.Name))
 
 }
