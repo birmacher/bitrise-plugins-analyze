@@ -214,7 +214,8 @@ func createFileStructureForPackage(files *FileInfo, dexPackage DexPackage, dexFi
 			Type:         "directory",
 			Children:     make([]FileInfo, 0),
 		})
-		fmt.Println("Created directory:", relativePath)
+		parent = &parent.Children[len(parent.Children)-1] // Update parent to the newly created directory
+		fmt.Println("Created directory:", parent.RelativePath)
 	}
 
 	parent.Children = append(parent.Children, FileInfo{
