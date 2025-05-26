@@ -114,71 +114,69 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 
 	// For each CAR file, find matching file in extendedFiles and add asset info as children
 	for _, carFile := range bundle.CarFiles {
-		// Find matching file path in extendedFiles tree
-		var findAndAddAssets func(files *FileInfo) bool
-		findAndAddAssets = func(files *FileInfo) bool {
-			if files.RelativePath == carFile.Path {
-
-				// Add each asset as a child
-				for _, asset := range carFile.Assets {
-					assetPath := filepath.Join(carFile.Path, asset.Name)
-					assetInfo := FileInfo{
-						RelativePath: assetPath,
-						Type:         "image",
-						Children:     make([]FileInfo, 0),
-					}
-
-					// Add renditions as children of the asset
-					for _, rendition := range asset.RenditionInfo {
-						renditionInfo := FileInfo{
-							RelativePath: filepath.Join(assetPath, fmt.Sprintf("%s @ %dx (%s)", rendition.RenditionName, rendition.Scale, rendition.Idiom)),
-							Size:         rendition.Size,
-							Shasum:       rendition.Shasum,
-							Type:         "image",
-						}
-						assetInfo.Children = append(assetInfo.Children, renditionInfo)
-
-						assetInfo.Size += rendition.Size
-					}
-
-					files.Children = append(files.Children, assetInfo)
-				}
-				return true
-			}
-
-			// Recursively search children
-			for i := range files.Children {
-				if findAndAddAssets(&files.Children[i]) {
-					return true
-				}
-			}
-			return false
-		}
-
-		findAndAddAssets(&extendedFiles)
+		addCarFilesToMetaInformation(&extendedFiles, carFile)
 	}
 
 	for _, dexPackage := range bundle.DexPackages {
 		// create file hierarchy for DEX packages
-		var findAndAddDexPackage func(files *FileInfo) bool
-		findAndAddDexPackage = func(files *FileInfo) bool {
-			if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
-				createFileStructureForPackage(bundle, files, dexPackage, files.RelativePath)
-
-				return true
-			}
-			// Recursively search children
-			for i := range files.Children {
-				if findAndAddDexPackage(&files.Children[i]) {
-					return true
-				}
-			}
-			return false
-		}
-		findAndAddDexPackage(&extendedFiles)
+		addDexFilesToMetaInformation(bundle, &extendedFiles, dexPackage)
 	}
 
 	return extendedFiles, nil
+}
+
+func addCarFilesToMetaInformation(files *FileInfo, carFile CarFileInfo) bool {
+	if files.RelativePath == carFile.Path {
+
+		// Add each asset as a child
+		for _, asset := range carFile.Assets {
+			assetPath := filepath.Join(carFile.Path, asset.Name)
+			assetInfo := FileInfo{
+				RelativePath: assetPath,
+				Type:         "image",
+				Children:     make([]FileInfo, 0),
+			}
+
+			// Add renditions as children of the asset
+			for _, rendition := range asset.RenditionInfo {
+				renditionInfo := FileInfo{
+					RelativePath: filepath.Join(assetPath, fmt.Sprintf("%s @ %dx (%s)", rendition.RenditionName, rendition.Scale, rendition.Idiom)),
+					Size:         rendition.Size,
+					Shasum:       rendition.Shasum,
+					Type:         "image",
+				}
+				assetInfo.Children = append(assetInfo.Children, renditionInfo)
+
+				assetInfo.Size += rendition.Size
+			}
+
+			files.Children = append(files.Children, assetInfo)
+		}
+		return true
+	}
+
+	// Recursively search children
+	for i := range files.Children {
+		if addCarFilesToMetaInformation(&files.Children[i], carFile) {
+			return true
+		}
+	}
+	return false
+}
+
+func addDexFilesToMetaInformation(bundle *AppBundle, files *FileInfo, dexPackage DexPackage) bool {
+	if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
+		createFileStructureForPackage(bundle, files, dexPackage, files.RelativePath)
+
+		return true
+	}
+	// Recursively search children
+	for i := range files.Children {
+		if addDexFilesToMetaInformation(bundle, &files.Children[i], dexPackage) {
+			return true
+		}
+	}
+	return false
 }
 
 func createFileStructureForPackage(bundle *AppBundle, files *FileInfo, dexPackage DexPackage, dexFileDir string) {
