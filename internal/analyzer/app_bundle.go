@@ -163,16 +163,17 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 		var findAndAddDexPackage func(files *FileInfo) bool
 		findAndAddDexPackage = func(files *FileInfo) bool {
 			if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
-				relativePath := strings.TrimPrefix(dexPackage.Name, files.RelativePath+"/")
-				// Create a directory node for the DEX package
-				dexPackageDir := FileInfo{
-					RelativePath: filepath.Join(dexPackage.Name, relativePath),
-					Type:         "dex_package",
-					Size:         dexPackage.Size,
-					Children:     make([]FileInfo, 0),
-				}
-				// Add the DEX package directory to the current file node
-				files.Children = append(files.Children, dexPackageDir)
+				// relativePath := strings.TrimPrefix(dexPackage.Name, files.RelativePath+"/")
+				// // Create a directory node for the DEX package
+				// dexPackageDir := FileInfo{
+				// 	RelativePath: filepath.Join(dexPackage.Name, relativePath),
+				// 	Type:         "dex_package",
+				// 	Size:         dexPackage.Size,
+				// 	Children:     make([]FileInfo, 0),
+				// }
+				// // Add the DEX package directory to the current file node
+				// files.Children = append(files.Children, dexPackageDir)
+				createFileStructureForPackage(files, dexPackage, files.RelativePath)
 
 				return true
 			}
@@ -188,4 +189,40 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 	}
 
 	return extendedFiles, nil
+}
+
+func createFileStructureForPackage(files *FileInfo, dexPackage DexPackage, dexFileDir string) {
+	packageParts := strings.Split(strings.TrimPrefix(dexPackage.Name, dexFileDir+"/"), ".")
+
+	parent := files
+	directory := ""
+
+	for _, part := range packageParts {
+		relativePath := filepath.Join(dexFileDir, directory, part)
+		directory = filepath.Join(directory, part)
+
+		for _, child := range parent.Children {
+			if child.RelativePath == relativePath {
+				parent = &child
+				break
+			}
+		}
+
+		// not found, create a new child
+		parent.Children = append(files.Children, FileInfo{
+			RelativePath: relativePath,
+			Type:         "directory",
+			Children:     make([]FileInfo, 0),
+		})
+		fmt.Println("Created directory:", relativePath)
+	}
+
+	parent.Children = append(parent.Children, FileInfo{
+		RelativePath: filepath.Join(parent.RelativePath, dexPackage.Name),
+		Type:         "dex_package",
+		Size:         dexPackage.Size,
+		Children:     make([]FileInfo, 0),
+	})
+	fmt.Println("Created package:", filepath.Join(parent.RelativePath, dexPackage.Name))
+
 }
