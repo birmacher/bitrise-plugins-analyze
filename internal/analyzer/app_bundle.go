@@ -228,7 +228,7 @@ func createFileStructureForPackage(bundle *AppBundle, files *FileInfo, dexPackag
 func calculateSizeForDexPackage(bundle *AppBundle, packagePath string) int64 {
 	totalSize := int64(0)
 	for _, dexPkg := range bundle.DexPackages {
-		if strings.Contains(dexPkg.Name, packagePath) {
+		if dexPkg.Name == packagePath || strings.HasPrefix(dexPkg.Name, packagePath+".") {
 			totalSize += dexPkg.Size
 		}
 	}
