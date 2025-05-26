@@ -54,8 +54,6 @@ func analyzeApk(apkPath string) (*AppBundle, error) {
 	bundle.Files = files
 
 	// Analyze DEX files
-	// TODO: Export DEX files to file structure under the unzipped APK
-	// Only after run analyzeFile as it will correctly setup the file structure
 	dexPackages, err := analyzeDexFiles(unzipedApkDir)
 	if err != nil {
 		// Log the error but don't fail the analysis
