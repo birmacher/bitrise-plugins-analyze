@@ -1,8 +1,5 @@
 version: 2
 
-env:
-  - GITHUB_TOKEN={{ .Env.GITHUB_TOKEN }}
-
 before:
   hooks:
   - go mod tidy
