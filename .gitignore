@@ -30,3 +30,4 @@ go.work
 
 deploy/
 androguard.*
+.env
