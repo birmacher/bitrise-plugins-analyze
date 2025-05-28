@@ -25,8 +25,8 @@ archives:
 
 release:
   github:
-    owner: bitrise-io
-    name: bitrise-remote-access-cli
+    owner: birmacher
+    name: bitrise-plugins-analyze
   draft: true
   mode: replace
 
