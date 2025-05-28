@@ -45,77 +45,38 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	// Basic Information (not collapsible)
 	content.WriteString("## ℹ️ Basic Information\n\n")
-	content.WriteString("| Property | Value |\n")
-	content.WriteString("|----------|-------|\n")
-	content.WriteString(fmt.Sprintf("| Bundle ID | `%s` |\n", bundle.BundleID))
-	content.WriteString(fmt.Sprintf("| Version | %s |\n", bundle.Version))
-	content.WriteString(fmt.Sprintf("| Minimum OS Version | %s |\n", bundle.MinimumOSVersion))
-	content.WriteString(fmt.Sprintf("| Download Size | %s |\n", formatSize(bundle.DownloadSize)))
-	content.WriteString(fmt.Sprintf("| Install Size | %s |\n", formatSize(bundle.InstallSize)))
-	content.WriteString(fmt.Sprintf("| Supported Platforms | %s |\n\n", strings.Join(bundle.SupportedPlatforms, ", ")))
+	content.WriteString("| Name | Version | Download Size | Install Size |\n")
+	content.WriteString("|------|---------|----------------|--------------|\n")
+	content.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n",
+		bundle.BundleID,
+		bundle.Version,
+		formatSize(bundle.DownloadSize),
+		formatSize(bundle.InstallSize)))
 
-	// Top 10 Largest Modules
-	content.WriteString("## 📦 Top 10 Largest Modules\n\n")
-	content.WriteString("<details>\n")
-
+	// Top Largest Modules
 	modules := FindLargestModules(bundle.Files)
-
-	// Count modules (excluding root)
-	moduleCount := len(modules)
-	if moduleCount > 0 {
-		moduleCount-- // Subtract root module
-	}
-	if moduleCount > 10 {
-		moduleCount = 10
-	}
-
-	totalSize := int64(0)
-	for _, module := range modules[1:] {
-		totalSize += module.Size
-	}
-
-	content.WriteString(fmt.Sprintf("<summary>Found %d modules totaling %s, click to expand</summary>\n\n",
-		moduleCount, formatSize(totalSize)))
-	content.WriteString("| Module | Size | File Count | % of Total |\n")
-	content.WriteString("|--------|------|------------|------------|\n")
-
-	// Skip the root module (index 0) and take up to 10 modules
-	endIndex := len(modules)
-	if endIndex > 11 { // 11 because we skip the first one
-		endIndex = 11
-	}
-	if endIndex > 1 { // Only process if we have modules beyond the root
-		for _, module := range modules[1:endIndex] {
-			percentage := float64(module.Size) / float64(bundle.InstallSize) * 100
-			content.WriteString(fmt.Sprintf("| %s | %s | %d | %.1f%% |\n",
-				module.RelativePath,
-				formatSize(module.Size),
-				CountFiles(module),
-				percentage))
+	content.WriteString("<details>\n")
+	content.WriteString(fmt.Sprintf("<summary>📦 Top %d largest modules</summary>\n\n", len(modules)))
+	content.WriteString("| Module | Size | % of Total |\n")
+	content.WriteString("|------|------|------------|\n")
+	for i, module := range modules {
+		if i >= 10 {
+			break
 		}
+		percentage := float64(module.Size) / float64(bundle.InstallSize) * 100
+		content.WriteString(fmt.Sprintf("| %s | %s | %.1f%% |\n",
+			module.RelativePath,
+			formatSize(module.Size),
+			percentage))
 	}
 	content.WriteString("\n</details>\n\n")
 
-	// Top 10 Largest Files
-	content.WriteString("## 📄 Top 10 Largest Files\n\n")
-	content.WriteString("<details>\n")
-
+	// Top Largest Files
 	files := FindLargestFiles(bundle.Files)
-	fileCount := len(files)
-	if fileCount > 10 {
-		fileCount = 10
-	}
-
-	totalFileSize := int64(0)
-	for i := 0; i < fileCount; i++ {
-		totalFileSize += files[i].Size
-	}
-
-	content.WriteString(fmt.Sprintf("<summary>Found %d large files totaling %s, click to expand</summary>\n\n",
-		fileCount, formatSize(totalFileSize)))
+	content.WriteString("<details>\n")
+	content.WriteString(fmt.Sprintf("<summary>📄 Top %d largest files</summary>\n\n", len(files)))
 	content.WriteString("| File | Size | % of Total |\n")
 	content.WriteString("|------|------|------------|\n")
-
 	for i, file := range files {
 		if i >= 10 {
 			break
@@ -126,7 +87,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 			formatSize(file.Size),
 			percentage))
 	}
-	content.WriteString("\n</details>\n\n")
+	content.WriteString("<details>\n")
 
 	// Collect all duplicates
 	var allDuplicates []duplicateInfo
