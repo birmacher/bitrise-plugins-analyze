@@ -43,8 +43,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	// Header
 	content.WriteString(fmt.Sprintf("# 📱 App Bundle Analysis: %s\n\n", bundle.AppName))
 
-	// Basic Information (not collapsible)
-	content.WriteString("## ℹ️ Basic Information\n\n")
+	// Basic Information
 	content.WriteString("| Name | Version | Download Size | Install Size |\n")
 	content.WriteString("|------|---------|----------------|--------------|\n")
 	content.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n",

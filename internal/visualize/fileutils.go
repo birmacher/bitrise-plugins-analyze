@@ -55,22 +55,9 @@ func FindLargestModules(root analyzer.FileInfo) []analyzer.FileInfo {
 		var traverse func(file analyzer.FileInfo)
 		traverse = func(file analyzer.FileInfo) {
 			if len(file.Children) > 0 {
-				var totalSize int64
+				modules = append(modules, file)
 				for _, child := range file.Children {
-					if len(child.Children) == 0 {
-						totalSize += child.Size
-					}
 					traverse(child)
-				}
-				if totalSize > 0 {
-					// Create a new FileInfo for the module with calculated size
-					moduleInfo := analyzer.FileInfo{
-						RelativePath: file.RelativePath,
-						Size:         totalSize,
-						Children:     file.Children,
-						Type:         "directory",
-					}
-					modules = append(modules, moduleInfo)
 				}
 			}
 		}
