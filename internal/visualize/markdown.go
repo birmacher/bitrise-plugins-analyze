@@ -55,8 +55,9 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	// Top Largest Modules
 	modules := FindLargestModules(bundle.Files)
+	topLargestModuleCount := min(len(modules), 10)
 	content.WriteString("<details>\n")
-	content.WriteString(fmt.Sprintf("<summary>📦 Top %d largest modules</summary>\n\n", len(modules)))
+	content.WriteString(fmt.Sprintf("<summary>📦 Top %d largest modules</summary>\n\n", topLargestModuleCount))
 	content.WriteString("| Module | Size | % of Total |\n")
 	content.WriteString("|------|------|------------|\n")
 	for i, module := range modules {
@@ -73,8 +74,9 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 
 	// Top Largest Files
 	files := FindLargestFiles(bundle.Files)
+	topLargestFilesCount := min(len(files), 10)
 	content.WriteString("<details>\n")
-	content.WriteString(fmt.Sprintf("<summary>📄 Top %d largest files</summary>\n\n", len(files)))
+	content.WriteString(fmt.Sprintf("<summary>📄 Top %d largest files</summary>\n\n", topLargestFilesCount))
 	content.WriteString("| File | Size | % of Total |\n")
 	content.WriteString("|------|------|------------|\n")
 	for i, file := range files {
