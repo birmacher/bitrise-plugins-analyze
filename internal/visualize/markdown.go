@@ -31,7 +31,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 	content.WriteString(fmt.Sprintf("# 📱 App Bundle Analysis: %s\n\n", bundle.AppName))
 
 	// Basic Information
-	content.WriteString("| Name | Version | Download Size | Install Size |\n")
+	content.WriteString("| Bundle ID | Version | Download Size | Install Size |\n")
 	content.WriteString("|------|---------|----------------|--------------|\n")
 	content.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n",
 		bundle.BundleID,
