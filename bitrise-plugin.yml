@@ -1,0 +1,6 @@
+name: analyzer
+description: App Bundle Analyzer
+executable:
+  osx: https://github.com/birmacher/bitrise-plugins-analyze/releases/download/0.0.1/bitrise-plugins-annotations-Darwin-x86_64
+  osx-arm64: https://github.com/birmacher/bitrise-plugins-analyze/releases/download/0.0.1/bitrise-plugins-annotations-Darwin-arm64
+  linux: https://github.com/birmacher/bitrise-plugins-analyze/releases/download/0.0.1/bitrise-plugins-annotations-Linux-x86_64
