@@ -9,19 +9,6 @@ import (
 	"strings"
 )
 
-// fileWithSize represents a file with its size for sorting
-type fileWithSize struct {
-	path string
-	size int64
-}
-
-// moduleWithSize represents a directory module with its total size
-type moduleWithSize struct {
-	path      string
-	size      int64
-	fileCount int
-}
-
 // duplicateInfo represents information about duplicate content
 type duplicateInfo struct {
 	name        string   // file name or asset name
@@ -88,7 +75,7 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 			formatSize(file.Size),
 			percentage))
 	}
-	content.WriteString("<details>\n")
+	content.WriteString("</details>\n")
 
 	// Collect all duplicates
 	var allDuplicates []duplicateInfo
