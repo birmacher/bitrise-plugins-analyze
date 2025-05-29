@@ -167,6 +167,22 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 		content.WriteString("\n</details>\n\n")
 	}
 
+	// Add missing resources section
+	missingResources := FindMissingResources(*bundle)
+	if len(missingResources) > 0 {
+		content.WriteString("## ❓ Missing Resources\n\n")
+		content.WriteString("The following resources were expected but not found in the bundle:\n\n")
+		content.WriteString("| Resource | Type | Size |\n")
+		content.WriteString("|----------|------|------|\n")
+		for _, res := range missingResources {
+			content.WriteString(fmt.Sprintf("| %s | %s | %s |\n",
+				res.RelativePath,
+				res.Type,
+				formatSize(res.Size)))
+		}
+		content.WriteString("\n")
+	}
+
 	// Write the markdown file
 	if err := os.WriteFile(mdPath, []byte(content.String()), 0644); err != nil {
 		return fmt.Errorf("failed to write markdown file: %v", err)
