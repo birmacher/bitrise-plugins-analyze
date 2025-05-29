@@ -42,7 +42,6 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 
 		// Find any *.dex file
 		if filepath.Ext(path) == ".dex" {
-			fmt.Println("Analyzing DEX file:", path)
 			// check dex file with dex_py
 			dexFiles, err := AnalyzeDex(path)
 			if err != nil {
