@@ -4,6 +4,7 @@ import (
 	"bitrise-plugins-analyze/internal/analyzer"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // FindLargestFiles returns a sorted list of largest individual files
@@ -176,4 +177,39 @@ func FindDuplicates(root analyzer.FileInfo) []DuplicateGroup {
 	}
 
 	return duplicates
+}
+
+// Find those resources that are not in the arsc file
+func FindMissingResources(bundle analyzer.AppBundle) []analyzer.FileInfo {
+	var missingResources []analyzer.FileInfo
+	// Copy bundle.Files to a new var
+
+	var traverse func(file analyzer.FileInfo)
+	traverse = func(file analyzer.FileInfo) {
+		if strings.HasPrefix(file.RelativePath, "res/") {
+			// get res/{type}/{name}.{extension}
+			parts := strings.Split(file.RelativePath, "/")
+			if len(parts) == 3 {
+				resourceType := parts[1]
+				resourceName := strings.Split(parts[2], ".")[0]
+
+				// Find in arscResources
+				for _, asrc := range bundle.AsrcFiles {
+					if strings.HasPrefix(resourceType, asrc.Type) && asrc.Name == resourceName {
+						return
+					}
+				}
+				// Not found in arsc, add to missing resources
+				missingResources = append(missingResources, file)
+			}
+		}
+
+		for _, child := range file.Children {
+			traverse(child)
+		}
+	}
+
+	traverse(bundle.Files)
+
+	return missingResources
 }

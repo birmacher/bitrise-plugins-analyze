@@ -89,6 +89,9 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	// Find duplicate files
 	duplicates := FindDuplicates(fileInfo)
 
+	missingResources := FindMissingResources(*bundle)
+	fmt.Println("Missing Resources: ", missingResources)
+
 	// Create template data
 	data := templateData{
 		Title:          "App Bundle Analysis",
