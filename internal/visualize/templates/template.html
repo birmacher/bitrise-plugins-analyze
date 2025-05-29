@@ -495,6 +495,33 @@
         {{end}}
       </ul>
     </div>
+    
+    <!-- Missing Resources Section -->
+    <div id="missingResourcesContainer" {{if not .MissingResources}}style="display: none;"{{end}}>
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">⚠️</span>
+          Unused Resources
+        </h2>
+        {{with .MissingResources}}
+        <p class="section-description">
+          These resources might be unused and could potentially be removed to reduce app size.
+        </p>
+        {{end}}
+      </div>
+      <ul class="breakdown-list" id="missingResourcesList">
+        {{range .MissingResources}}
+        <li class="file-item">
+          <div class="item-info">
+            <div class="item-name">{{.RelativePath}}</div>
+          </div>
+          <div class="item-size">
+            <span class="size-number">{{formatSize .Size}}</span>
+          </div>
+        </li>
+        {{end}}
+      </ul>
+    </div>
   </div>
 </div>
 <script>
