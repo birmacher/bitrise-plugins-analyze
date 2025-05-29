@@ -62,6 +62,16 @@ func analyzeApk(apkPath string) (*AppBundle, error) {
 		bundle.DexPackages = dexPackages
 	}
 
+	// // Analyze arsc files
+	// arcsResources, err := AnalyzeArsc(apkPath)
+	// if err != nil {
+	// 	// Log the error but don't fail the analysis
+	// 	fmt.Printf("Warning: failed to analyze arsc files: %v\n", err)
+	// } else {
+	// 	fmt.Println(arcsResources)
+	// 	// bundle.DexPackages = dexPackages
+	// }
+
 	// Calculate sizes
 	bundle.InstallSize = files.Size
 
