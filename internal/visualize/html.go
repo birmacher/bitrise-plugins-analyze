@@ -18,18 +18,19 @@ var tmplFS embed.FS
 
 // templateData represents the data structure for the HTML template
 type templateData struct {
-	Title          string
-	AppName        string
-	BundleID       string
-	Platform       string
-	Version        string
-	DownloadSize   string
-	InstallSize    string
-	FileTree       template.JS
-	LargestFiles   []analyzer.FileInfo
-	LargestModules []analyzer.FileInfo
-	TypeBreakdown  []TypeBreakdown
-	Duplicates     []DuplicateGroup
+	Title            string
+	AppName          string
+	BundleID         string
+	Platform         string
+	Version          string
+	DownloadSize     string
+	InstallSize      string
+	FileTree         template.JS
+	LargestFiles     []analyzer.FileInfo
+	LargestModules   []analyzer.FileInfo
+	TypeBreakdown    []TypeBreakdown
+	Duplicates       []DuplicateGroup
+	MissingResources []analyzer.FileInfo
 }
 
 // formatSize converts bytes to a human-readable string
@@ -89,20 +90,23 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	// Find duplicate files
 	duplicates := FindDuplicates(fileInfo)
 
+	missingResources := FindMissingResources(*bundle)
+
 	// Create template data
 	data := templateData{
-		Title:          "App Bundle Analysis",
-		AppName:        appName,
-		BundleID:       bundle.BundleID,
-		Platform:       strings.Join(bundle.SupportedPlatforms, ", "),
-		Version:        bundle.Version,
-		DownloadSize:   formatSize(bundle.DownloadSize),
-		InstallSize:    formatSize(bundle.InstallSize),
-		FileTree:       template.JS(fileTreeJSON),
-		LargestFiles:   largestFiles,
-		LargestModules: largestModules,
-		TypeBreakdown:  typeBreakdown,
-		Duplicates:     duplicates,
+		Title:            "App Bundle Analysis",
+		AppName:          appName,
+		BundleID:         bundle.BundleID,
+		Platform:         strings.Join(bundle.SupportedPlatforms, ", "),
+		Version:          bundle.Version,
+		DownloadSize:     formatSize(bundle.DownloadSize),
+		InstallSize:      formatSize(bundle.InstallSize),
+		FileTree:         template.JS(fileTreeJSON),
+		LargestFiles:     largestFiles,
+		LargestModules:   largestModules,
+		TypeBreakdown:    typeBreakdown,
+		Duplicates:       duplicates,
+		MissingResources: missingResources,
 	}
 
 	// Create a buffer to store the rendered template

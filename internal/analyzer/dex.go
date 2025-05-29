@@ -20,6 +20,12 @@ type DexPackage struct {
 	Classes     []DexClass `json:"classes"`
 }
 
+type AsrcFile struct {
+	ResourceId string `json:"resource_id"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+}
+
 func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 	allPackages := []DexPackage{}
 
