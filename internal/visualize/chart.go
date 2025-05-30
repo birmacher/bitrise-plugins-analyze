@@ -2,7 +2,6 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/internal/analyzer"
-	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -33,7 +32,7 @@ func GeneratePlotlyChart(bundle *analyzer.AppBundle) Chart {
 			chart.Labels = append(chart.Labels, bundle.AppName)
 			chart.Values = append(chart.Values, bundle.InstallSize)
 		} else {
-			chart.Labels = append(chart.Labels, files.RelativePath)
+			chart.Labels = append(chart.Labels, filepath.Base(files.RelativePath))
 			chart.Values = append(chart.Values, files.Size)
 		}
 		chart.Parents = append(chart.Parents, parent)
@@ -79,19 +78,16 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 		dexPackagePath := filepath.Join("dex", dexPackage.GetPath())
 		dexPackagePathParts := strings.Split(dexPackagePath, "/")
 
-		fmt.Println("[*] ", dexPackagePath)
-
-		for i := 1; i < len(dexPackagePathParts); i++ {
+		for i := 1; i < len(dexPackagePathParts)-1; i++ {
 			// Create intermediate directories if they don't exist
 			intermediatePath := filepath.Join("dex", strings.Join(dexPackagePathParts[1:i+1], "/"))
 			// Check if the intermediate directory already exists
 			exists := false
-			for j, child := range parent.Children {
-				if child.RelativePath == intermediatePath {
+			for j := range parent.Children {
+				if parent.Children[j].RelativePath == intermediatePath {
 					parent.Children[j].Size += dexPackage.Size
-					parent = &child
+					parent = &parent.Children[j]
 					exists = true
-					fmt.Println("[/] ", intermediatePath, " parent ", parent.RelativePath)
 					break
 				}
 			}
@@ -102,7 +98,6 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 					Size:         dexPackage.Size,
 					Children:     make([]analyzer.FileInfo, 0),
 				})
-				fmt.Println("[+] ", intermediatePath, " parent ", parent.RelativePath)
 				parent = &parent.Children[len(parent.Children)-1]
 			}
 		}
@@ -113,7 +108,6 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 			Size:         dexPackage.Size,
 			Children:     make([]analyzer.FileInfo, 0),
 		})
-		fmt.Println("[++] ", dexPackagePath, " parent ", parent.RelativePath)
 		dexPackageSizes += dexPackage.Size
 	}
 
