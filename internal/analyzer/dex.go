@@ -14,10 +14,9 @@ type DexClass struct {
 }
 
 type DexPackage struct {
-	DexFilePath string     `json:"dex_file_path"`
-	Name        string     `json:"name"`
-	Size        int64      `json:"size"`
-	Classes     []DexClass `json:"classes"`
+	Name    string     `json:"name"`
+	Size    int64      `json:"size"`
+	Classes []DexClass `json:"classes"`
 }
 
 type AsrcFile struct {
@@ -50,12 +49,6 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 				return nil
 			}
 
-			// relative dex file path
-			relDexFilePath, err := filepath.Rel(unzipedApkDir, path)
-			if err != nil {
-				return fmt.Errorf("failed to get relative dex file path: %v", err)
-			}
-
 			// Go through the analyzed dex files and create DexPackage objects
 			for classes, size := range dexFiles {
 				packageName := strings.TrimPrefix(filepath.Dir(classes), "L")
@@ -67,7 +60,7 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 				}
 
 				// add class to the package
-				addClassToPackage(&allPackages, relDexFilePath, packageName, className, int64(size))
+				addClassToPackage(&allPackages, packageName, className, int64(size))
 			}
 		}
 
@@ -81,12 +74,10 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 	return allPackages, nil
 }
 
-func addClassToPackage(dexPackages *[]DexPackage, dexFilePath string, packageName, className string, size int64) {
-	packagePath := filepath.Join(dexFilePath, strings.ReplaceAll(packageName, "/", "."))
-
+func addClassToPackage(dexPackages *[]DexPackage, packageName, className string, size int64) {
 	var pkgIdx int = -1
 	for i := range *dexPackages {
-		if (*dexPackages)[i].Name == packagePath {
+		if (*dexPackages)[i].Name == packageName {
 			pkgIdx = i
 			break
 		}
@@ -94,10 +85,9 @@ func addClassToPackage(dexPackages *[]DexPackage, dexFilePath string, packageNam
 	if pkgIdx == -1 {
 		// Not found, create a new one and append
 		*dexPackages = append(*dexPackages, DexPackage{
-			DexFilePath: dexFilePath,
-			Name:        packagePath,
-			Size:        0,
-			Classes:     make([]DexClass, 0),
+			Name:    packageName,
+			Size:    0,
+			Classes: make([]DexClass, 0),
 		})
 		pkgIdx = len(*dexPackages) - 1
 	}
@@ -111,7 +101,7 @@ func addClassToPackage(dexPackages *[]DexPackage, dexFilePath string, packageNam
 }
 
 func (dexPackage DexPackage) GetPath() string {
-	return filepath.Join(dexPackage.DexFilePath, dexPackage.Name)
+	return dexPackage.Name
 
 }
 
