@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/internal/analyzer"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -73,12 +74,46 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 
 	dexPackageSizes := int64(0)
 	for _, dexPackage := range bundle.DexPackages {
-		dexFileInfo.Children = append(dexFileInfo.Children, analyzer.FileInfo{
-			RelativePath: filepath.Join("dex", dexPackage.GetPath()),
+		parent := &dexFileInfo
+
+		dexPackagePath := filepath.Join("dex", dexPackage.GetPath())
+		dexPackagePathParts := strings.Split(dexPackagePath, "/")
+
+		fmt.Println("[*] ", dexPackagePath)
+
+		for i := 1; i < len(dexPackagePathParts); i++ {
+			// Create intermediate directories if they don't exist
+			intermediatePath := filepath.Join("dex", strings.Join(dexPackagePathParts[1:i+1], "/"))
+			// Check if the intermediate directory already exists
+			exists := false
+			for j, child := range parent.Children {
+				if child.RelativePath == intermediatePath {
+					parent.Children[j].Size += dexPackage.Size
+					parent = &child
+					exists = true
+					fmt.Println("[/] ", intermediatePath, " parent ", parent.RelativePath)
+					break
+				}
+			}
+			if !exists {
+				parent.Children = append(parent.Children, analyzer.FileInfo{
+					RelativePath: intermediatePath,
+					Type:         "directory",
+					Size:         dexPackage.Size,
+					Children:     make([]analyzer.FileInfo, 0),
+				})
+				fmt.Println("[+] ", intermediatePath, " parent ", parent.RelativePath)
+				parent = &parent.Children[len(parent.Children)-1]
+			}
+		}
+
+		parent.Children = append(parent.Children, analyzer.FileInfo{
+			RelativePath: filepath.Join(dexPackagePath, strings.ReplaceAll(dexPackage.GetPath(), "/", ".")),
 			Type:         "Dex",
 			Size:         dexPackage.Size,
 			Children:     make([]analyzer.FileInfo, 0),
 		})
+		fmt.Println("[++] ", dexPackagePath, " parent ", parent.RelativePath)
 		dexPackageSizes += dexPackage.Size
 	}
 
