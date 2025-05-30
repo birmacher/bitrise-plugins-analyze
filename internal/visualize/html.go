@@ -25,7 +25,7 @@ type templateData struct {
 	Version          string
 	DownloadSize     string
 	InstallSize      string
-	FileTree         template.JS
+	ChartData        template.JS
 	LargestFiles     []analyzer.FileInfo
 	LargestModules   []analyzer.FileInfo
 	TypeBreakdown    []TypeBreakdown
@@ -68,7 +68,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get file info: %v", err)
 	}
-	fileTreeJSON, err := json.Marshal(fileInfo)
+	fileTreeJSON, err := json.Marshal(GeneratePlotlyChart(bundle))
 	if err != nil {
 		return fmt.Errorf("failed to marshal file tree: %v", err)
 	}
@@ -101,7 +101,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		Version:          bundle.Version,
 		DownloadSize:     formatSize(bundle.DownloadSize),
 		InstallSize:      formatSize(bundle.InstallSize),
-		FileTree:         template.JS(fileTreeJSON),
+		ChartData:        template.JS(fileTreeJSON),
 		LargestFiles:     largestFiles,
 		LargestModules:   largestModules,
 		TypeBreakdown:    typeBreakdown,
