@@ -79,9 +79,12 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 		dexPackagePathParts := strings.Split(dexPackagePath, "/")
 
 		for i := 1; i < len(dexPackagePathParts)-1; i++ {
-			// Create intermediate directories if they don't exist
 			intermediatePath := filepath.Join("dex", strings.Join(dexPackagePathParts[1:i+1], "/"))
-			// Check if the intermediate directory already exists
+
+			if dexPackage.Size == 0 {
+				continue
+			}
+
 			exists := false
 			for j := range parent.Children {
 				if parent.Children[j].RelativePath == intermediatePath {
@@ -121,6 +124,24 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 		})
 	}
 
+	dexFileInfo.Children = simplifyDirectory(dexFileInfo.Children)
+
 	// Append Dex Packages to the bundle
 	bundle.Files.Children = append(bundle.Files.Children, dexFileInfo)
+}
+
+func simplifyDirectory(children []analyzer.FileInfo) []analyzer.FileInfo {
+	for i, child := range children {
+		children[i].Children = simplifyDirectory(child.Children)
+	}
+
+	for i, child := range children {
+		if child.Type == "directory" && len(child.Children) == 1 && child.Children[0].Type == "directory" {
+			relativePath := strings.Join([]string{child.RelativePath, filepath.Base(child.Children[0].RelativePath)}, ".")
+			children[i] = child.Children[0]
+			children[i].RelativePath = relativePath
+		}
+	}
+
+	return children
 }
