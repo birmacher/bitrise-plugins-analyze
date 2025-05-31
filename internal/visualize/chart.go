@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/internal/analyzer"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -45,6 +46,10 @@ func GeneratePlotlyChart(bundle *analyzer.AppBundle) Chart {
 	}
 	traverseFiles(bundle.Files, "")
 
+	for _, label := range chart.Ids {
+		fmt.Println(label + "|")
+	}
+
 	return chart
 }
 
@@ -75,7 +80,15 @@ func ExpandDexFiles(bundle *analyzer.AppBundle) {
 	for _, dexPackage := range bundle.DexPackages {
 		parent := &dexFileInfo
 
+		if dexPackage.GetPath() == "" || dexPackage.GetPath() == "." {
+			continue
+		}
+
 		dexPackagePath := filepath.Join("dex", dexPackage.GetPath())
+		if dexPackagePath == "dex" {
+			fmt.Println("dex|!!")
+			fmt.Println(dexPackage.GetPath())
+		}
 		dexPackagePathParts := strings.Split(dexPackagePath, "/")
 
 		for i := 1; i < len(dexPackagePathParts)-1; i++ {
