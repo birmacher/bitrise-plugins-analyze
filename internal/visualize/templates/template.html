@@ -527,7 +527,7 @@
 <script>
 // Initialize data from server
 const appData = {
-  fileTree: {{.FileTree}},
+  ChartData: {{.ChartData}},
   largestFiles: {{.LargestFiles}},
   largestModules: {{.LargestModules}}
 };
@@ -547,7 +547,7 @@ function updateLargestFiles() {
   filesList.innerHTML = '';
   
   appData.largestFiles.forEach(file => {
-    const percentage = (file.size / appData.fileTree.size * 100).toFixed(1);
+    const percentage = (file.size / {{.InstallSize}} * 100).toFixed(1);
     const fileName = file.relative_path.split('/').pop();
     const filePath = file.relative_path.substring(0, file.relative_path.length - fileName.length);
     
@@ -573,7 +573,7 @@ function updateLargestModules() {
   modulesList.innerHTML = '';
   
   appData.largestModules.forEach(module => {
-    const percentage = (module.size / appData.fileTree.size * 100).toFixed(1);
+    const percentage = (module.size / {{.InstallSize}} * 100).toFixed(1);
     const moduleName = module.relative_path.split('/').pop();
     const modulePath = module.relative_path.substring(0, module.relative_path.length - moduleName.length);
     const fileCount = module.children.filter(child => !child.children || child.children.length === 0).length;
@@ -594,29 +594,17 @@ function updateLargestModules() {
   });
 }
 
-// Helper function to flatten the tree for the treemap visualization
-function flatten(node, parentLabel, labels, parents, values, types, ids) {
-  const name = node.relative_path.split('/').pop();
-  const label = (parentLabel === null) ? "{{.AppName}}.app" : name;
-  const id = (parentLabel === null) ? "{{.AppName}}.app" : node.relative_path;
-  
-  labels.push(label);
-  parents.push(parentLabel === null ? "" : parentLabel);
-  values.push(node.size);
-  types.push(node.type || 'unknown');
-  ids.push(id);
-  
-  if (node.children) {
-    for (const child of node.children) {
-      flatten(child, id, labels, parents, values, types, ids);
-    }
-  }
-}
-
 // Initialize everything
 function initChart() {
-  const labels = [], parents = [], values = [], types = [], ids = [];
-  flatten(appData.fileTree, null, labels, parents, values, types, ids);
+  const labels = appData.ChartData.labels;
+  const parents = appData.ChartData.parents;
+  const values = appData.ChartData.values;
+  const types = appData.ChartData.types;
+  const ids = appData.ChartData.ids;
+  if (!labels || !parents || !values || !types || !ids) {
+    console.error("Chart data is missing or incomplete");
+    return;
+  }
 
   // Color mapping for different file types
   const colorMap = {

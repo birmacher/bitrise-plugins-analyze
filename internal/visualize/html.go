@@ -25,7 +25,7 @@ type templateData struct {
 	Version          string
 	DownloadSize     string
 	InstallSize      string
-	FileTree         template.JS
+	ChartData        template.JS
 	LargestFiles     []analyzer.FileInfo
 	LargestModules   []analyzer.FileInfo
 	TypeBreakdown    []TypeBreakdown
@@ -63,32 +63,32 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		appName = appName[:len(appName)-4] // Remove .app extension
 	}
 
-	// Convert FileTree to JSON string to make it safe for JavaScript
-	fileInfo, err := analyzer.FilesIncludingMetaInformation(bundle)
-	if err != nil {
-		return fmt.Errorf("failed to get file info: %v", err)
-	}
-	fileTreeJSON, err := json.Marshal(fileInfo)
+	// // Convert FileTree to JSON string to make it safe for JavaScript
+	// fileInfo, err := analyzer.FilesIncludingMetaInformation(bundle)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get file info: %v", err)
+	// }
+	fileTreeJSON, err := json.Marshal(GeneratePlotlyChart(bundle))
 	if err != nil {
 		return fmt.Errorf("failed to marshal file tree: %v", err)
 	}
 
 	// Pre-calculate largest files and modules
-	largestFiles := FindLargestFiles(fileInfo)
+	largestFiles := FindLargestFiles(bundle.Files)
 	if len(largestFiles) > 10 {
 		largestFiles = largestFiles[:10]
 	}
 
-	largestModules := FindLargestModules(fileInfo)
+	largestModules := FindLargestModules(bundle.Files)
 	if len(largestModules) > 10 {
 		largestModules = largestModules[:10]
 	}
 
 	// Calculate type breakdown
-	typeBreakdown := CalculateTypeBreakdown(fileInfo)
+	typeBreakdown := CalculateTypeBreakdown(bundle.Files)
 
 	// Find duplicate files
-	duplicates := FindDuplicates(fileInfo)
+	duplicates := FindDuplicates(bundle.Files)
 
 	missingResources := FindMissingResources(*bundle)
 
@@ -101,7 +101,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 		Version:          bundle.Version,
 		DownloadSize:     formatSize(bundle.DownloadSize),
 		InstallSize:      formatSize(bundle.InstallSize),
-		FileTree:         template.JS(fileTreeJSON),
+		ChartData:        template.JS(fileTreeJSON),
 		LargestFiles:     largestFiles,
 		LargestModules:   largestModules,
 		TypeBreakdown:    typeBreakdown,

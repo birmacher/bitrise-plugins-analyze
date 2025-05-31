@@ -118,11 +118,6 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 		addCarFilesToMetaInformation(&extendedFiles, carFile)
 	}
 
-	for _, dexPackage := range bundle.DexPackages {
-		// create file hierarchy for DEX packages
-		addDexFilesToMetaInformation(bundle, &extendedFiles, dexPackage)
-	}
-
 	return extendedFiles, nil
 }
 
@@ -163,73 +158,4 @@ func addCarFilesToMetaInformation(files *FileInfo, carFile CarFileInfo) bool {
 		}
 	}
 	return false
-}
-
-func addDexFilesToMetaInformation(bundle *AppBundle, files *FileInfo, dexPackage DexPackage) bool {
-	if strings.HasPrefix(dexPackage.Name, files.RelativePath) {
-		createFileStructureForPackage(bundle, files, dexPackage, files.RelativePath)
-
-		return true
-	}
-	// Recursively search children
-	for i := range files.Children {
-		if addDexFilesToMetaInformation(bundle, &files.Children[i], dexPackage) {
-			return true
-		}
-	}
-	return false
-}
-
-func createFileStructureForPackage(bundle *AppBundle, files *FileInfo, dexPackage DexPackage, dexFileDir string) {
-	packageParts := strings.Split(strings.TrimPrefix(dexPackage.Name, dexFileDir+"/"), ".")
-
-	parent := files
-	directory := ""
-
-	for _, part := range packageParts {
-		dexPackagePath := filepath.Join(directory, part)
-		relativePath := filepath.Join(dexFileDir, dexPackagePath)
-		dexPackageName := filepath.Join(dexFileDir, strings.ReplaceAll(dexPackagePath, "/", "."))
-
-		alreadyExists := false
-		for i := range parent.Children {
-			if parent.Children[i].RelativePath == relativePath {
-				parent = &parent.Children[i]
-				alreadyExists = true
-				break
-			}
-		}
-
-		if !alreadyExists {
-			// not found, create a new child
-			parent.Children = append(parent.Children, FileInfo{
-				RelativePath: relativePath,
-				Type:         "directory",
-				Size:         calculateSizeForDexPackage(bundle, dexPackageName),
-				Children:     make([]FileInfo, 0),
-			})
-
-			parent = &parent.Children[len(parent.Children)-1]
-		}
-
-		directory = filepath.Join(directory, part)
-	}
-
-	relativePath := filepath.Join(dexFileDir, directory, strings.TrimPrefix(dexPackage.Name, dexFileDir+"/"))
-	parent.Children = append(parent.Children, FileInfo{
-		RelativePath: relativePath,
-		Type:         "dex_package",
-		Size:         dexPackage.Size,
-		Children:     make([]FileInfo, 0),
-	})
-}
-
-func calculateSizeForDexPackage(bundle *AppBundle, packagePath string) int64 {
-	totalSize := int64(0)
-	for _, dexPkg := range bundle.DexPackages {
-		if dexPkg.Name == packagePath || strings.HasPrefix(dexPkg.Name, packagePath+".") {
-			totalSize += dexPkg.Size
-		}
-	}
-	return totalSize
 }
