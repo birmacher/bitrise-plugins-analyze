@@ -17,7 +17,7 @@ var (
 	generateMarkdown bool
 )
 
-var annotateCmd = &cobra.Command{
+var analyzeCmd = &cobra.Command{
 	Use:   "analyze [path]",
 	Short: "Analyze App",
 	Args:  cobra.MaximumNArgs(1),
@@ -87,9 +87,9 @@ var annotateCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(annotateCmd)
-	annotateCmd.Flags().BoolVar(&generateHTML, "html", false, "Generate HTML visualization")
-	annotateCmd.Flags().BoolVar(&generateJSON, "json", false, "Generate JSON output file")
-	annotateCmd.Flags().BoolVar(&generateMarkdown, "markdown", false, "Generate Markdown report")
-	annotateCmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory where the output files will be generated (default: current directory)")
+	rootCmd.AddCommand(analyzeCmd)
+	analyzeCmd.Flags().BoolVar(&generateHTML, "html", false, "Generate HTML visualization")
+	analyzeCmd.Flags().BoolVar(&generateJSON, "json", false, "Generate JSON output file")
+	analyzeCmd.Flags().BoolVar(&generateMarkdown, "markdown", false, "Generate Markdown report")
+	analyzeCmd.Flags().StringVar(&outputDir, "output-dir", "", "Directory where the output files will be generated (default: current directory)")
 }
