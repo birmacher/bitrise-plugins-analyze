@@ -37,7 +37,7 @@ func analyzeApk(apkPath string) (*AppBundle, error) {
 	}
 
 	// Set bundle metadata from manifest
-	bundle.AppName = "Todo"
+	bundle.AppName = manifest.Application.Label
 	bundle.BundleID = manifest.Package
 	bundle.Version = manifest.VersionName + " (" + manifest.VersionCode + ")"
 
