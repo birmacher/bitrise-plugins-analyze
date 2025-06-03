@@ -30,6 +30,7 @@ type templateData struct {
 	LargestModules   []core.FileInfo
 	TypeBreakdown    []visualize.TypeBreakdown
 	Duplicates       []visualize.DuplicateGroup
+	OversizedImages  []core.OversizedImage
 	MissingResources []core.FileInfo
 }
 
@@ -102,6 +103,7 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		TypeBreakdown:    typeBreakdown,
 		Duplicates:       duplicates,
 		MissingResources: missingResources,
+		OversizedImages:  bundle.OversizedImages,
 	}
 
 	// Create a buffer to store the rendered template

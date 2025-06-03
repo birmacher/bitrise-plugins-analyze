@@ -496,6 +496,28 @@
         {{end}}
       </ul>
     </div>
+
+    <div id="imageConversionContainer" {{if not .OversizedImages}}style="display: none;"{{end}}>
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">🗑️</span>
+          Oversized Images
+        </h2>
+      </div>
+      <ul class="breakdown-list" id="duplicatesList">
+        {{range .OversizedImages}}
+        <li class="file-item">
+          <div class="item-info">
+            <div class="item-path">{{.RelativePath}} to {{.ConvertedTo}}</div>
+          </div>
+          <div class="item-size">
+            <span class="size-number">{{formatSize .OriginalSize}}</span>
+            <span class="size-percentage">Saving: {{formatSize .Saving}}</span>
+          </div>
+        </li>
+        {{end}}
+      </ul>
+    </div>
     
     <!-- Missing Resources Section -->
     <div id="missingResourcesContainer" {{if not .MissingResources}}style="display: none;"{{end}}>
