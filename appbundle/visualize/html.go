@@ -63,11 +63,6 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		appName = appName[:len(appName)-4] // Remove .app extension
 	}
 
-	// // Convert FileTree to JSON string to make it safe for JavaScript
-	// fileInfo, err := appbundle.FilesIncludingMetaInformation(bundle)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get file info: %v", err)
-	// }
 	fileTreeJSON, err := json.Marshal(GeneratePlotlyChart(bundle))
 	if err != nil {
 		return fmt.Errorf("failed to marshal file tree: %v", err)

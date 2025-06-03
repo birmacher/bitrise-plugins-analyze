@@ -1,4 +1,4 @@
-package appbundle
+package core
 
 import (
 	"archive/zip"
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-func unzip(zip_path string) (string, error) {
+func Unzip(zip_path string) (string, error) {
 	tempDir, err := os.MkdirTemp("", "*")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp directory: %v", err)

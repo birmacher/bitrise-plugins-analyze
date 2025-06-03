@@ -48,7 +48,7 @@ var analyzeCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		bundle, err := appbundle.AnalyzeBundlePath(app_path)
+		bundle, err := appbundle.Analyze(app_path)
 		if err != nil {
 			return err
 		}

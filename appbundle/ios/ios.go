@@ -1,14 +1,16 @@
-package appbundle
+package ios
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
-func analyzeIOSBundle(bundle_path string) (*core.AppBundle, error) {
+func GetTempIPAPath(bundle_path string) (string, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var app_path string
@@ -27,14 +29,14 @@ func analyzeIOSBundle(bundle_path string) (*core.AppBundle, error) {
 	case core.XcarchiveExtension:
 		app_path, err = analyzeXcarchive(bundle_path)
 	default:
-		return nil, fmt.Errorf("unsupported file extension: %s", ext)
+		return "", fmt.Errorf("unsupported file extension: %s", ext)
 	}
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return AnalyzeAppBundle(app_path)
+	return app_path, nil
 }
 
 func analyzeXcarchive(app_path string) (string, error) {
@@ -43,7 +45,7 @@ func analyzeXcarchive(app_path string) (string, error) {
 }
 
 func analyzeIpa(app_path string) (string, string, error) {
-	tempDir, err := unzip(app_path)
+	tempDir, err := core.Unzip(app_path)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to unzip IPA: %v", err)
 	}
@@ -70,4 +72,40 @@ func findAppPath(directory string) (string, error) {
 	}
 
 	return absPath, nil
+}
+
+func CalculateDownloadSize(bundlePath string) (int64, error) {
+	tempDir, err := os.MkdirTemp("", "app-*")
+	if err != nil {
+		return 0, err
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create zip file path
+	zipPath := filepath.Join(tempDir, "app.zip")
+
+	// Run ditto command to create zip
+	cmd := exec.Command("ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", bundlePath, zipPath)
+	if err := cmd.Run(); err != nil {
+		return 0, err
+	}
+
+	// Get zip file size using stat
+	cmd = exec.Command("stat", "-f%z", zipPath)
+	output, err := cmd.Output()
+	if err != nil {
+		return 0, err
+	}
+
+	// Parse size from stat output
+	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
+}
+
+func CalculateInstallSize(bundlePath string) (int64, error) {
+	cmd := exec.Command("sh", "-c", "du -sk "+bundlePath+" | awk '{print $1 * 1024}'")
+	output, err := cmd.Output()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
 }

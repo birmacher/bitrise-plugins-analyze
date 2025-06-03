@@ -1,94 +1,29 @@
-package appbundle
+package android
 
 import (
-	"bitrise-plugins-analyze/appbundle/android"
 	"bitrise-plugins-analyze/appbundle/core"
-	androidcore "bitrise-plugins-analyze/appbundle/core/android"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
-func analyzeAndroidBundle(bundle_path string) (*core.AppBundle, error) {
+func GetTempAPKPath(bundle_path string) (string, error) {
 	ext := filepath.Ext(bundle_path)
 
 	if ext == core.ApkExtension {
-		return analyzeApk(bundle_path)
+		return bundle_path, nil
 	} else if ext == core.AabExtension {
 		bundle_path, err := analyzeAab(bundle_path)
-		defer os.RemoveAll(bundle_path)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to analyze AAB: %v", err)
+			return "", fmt.Errorf("failed to analyze AAB: %v", err)
 		}
 
-		return analyzeApk(bundle_path)
+		return bundle_path, nil
 	}
 
-	return nil, fmt.Errorf("unsupported Android file type: %s", ext)
-}
-
-func analyzeApk(apkPath string) (*core.AppBundle, error) {
-	// Create bundle info
-	bundle := &core.AppBundle{}
-
-	// Parse AndroidManifest.xml using apkanalyzer
-	manifest, err := android.ParseAndroidManifest(apkPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
-	}
-
-	// Set bundle metadata from manifest
-	bundle.AppName = manifest.Application.Label
-	bundle.BundleID = manifest.Package
-	bundle.Version = manifest.VersionName + " (" + manifest.VersionCode + ")"
-
-	unzipedApkDir, err := unzip(apkPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unzip APK: %v", err)
-	}
-
-	// Analyze the APK files
-	files, err := AnalyzeFile(unzipedApkDir, unzipedApkDir)
-	if err != nil {
-		return nil, err
-	}
-	bundle.Files = files
-
-	// Analyze DEX files
-	dexPackages, err := analyzeDexFiles(unzipedApkDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to analyze DEX files: %v", err)
-	} else {
-		bundle.DexPackages = dexPackages
-	}
-
-	// Analyze arsc files
-	arscResources, err := AnalyzeArsc(apkPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to analyze ARSC files: %v", err)
-	} else {
-		for resourceId, res := range arscResources {
-			bundle.AsrcFiles = append(bundle.AsrcFiles, androidcore.AsrcFile{
-				ResourceId: resourceId,
-				Type:       res["type"],
-				Name:       res["name"],
-			})
-		}
-	}
-
-	// Calculate sizes
-	bundle.InstallSize = files.Size
-
-	// Get the original APK file size for download size
-	apkInfo, err := os.Stat(apkPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get APK file size: %v", err)
-	}
-	bundle.DownloadSize = apkInfo.Size()
-
-	return bundle, nil
+	return "", fmt.Errorf("unsupported Android file type: %s", ext)
 }
 
 func analyzeAab(aabPath string) (string, error) {
@@ -149,7 +84,7 @@ func generateUniversalApk(aabPath, outputPath, keystorePath string) (string, err
 		return "", fmt.Errorf("failed to generate universal APK: %v", err)
 	}
 
-	apkPath, err := unzip(outputPath + ".apks")
+	apkPath, err := core.Unzip(outputPath + ".apks")
 	if err != nil {
 		return "", fmt.Errorf("failed to unzip .apks file: %v", err)
 	}
