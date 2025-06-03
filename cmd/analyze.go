@@ -6,6 +6,8 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -59,6 +61,23 @@ var analyzeCmd = &cobra.Command{
 			}
 		}
 
+		if outputDir != "" {
+			outputDir = os.ExpandEnv(outputDir)
+
+			if strings.HasPrefix(outputDir, "~") {
+				homeDir, err := os.UserHomeDir()
+				if err != nil {
+					return err
+				}
+
+				if outputDir == "~" {
+					outputDir = homeDir
+				} else if strings.HasPrefix(outputDir, "~/") {
+					outputDir = filepath.Join(homeDir, outputDir[2:])
+				}
+			}
+		}
+
 		// Create output directory if it doesn't exist
 		if err := os.MkdirAll(outputDir, 0755); err != nil {
 			return err
@@ -70,14 +89,14 @@ var analyzeCmd = &cobra.Command{
 			}
 		}
 
-		if generateHTML {
-			if err := visualize.GenerateHTML(bundle, outputDir); err != nil {
+		if generateMarkdown {
+			if err := visualize.GenerateMarkdown(bundle, outputDir); err != nil {
 				return err
 			}
 		}
 
-		if generateMarkdown {
-			if err := visualize.GenerateMarkdown(bundle, outputDir); err != nil {
+		if generateHTML {
+			if err := visualize.GenerateHTML(bundle, outputDir); err != nil {
 				return err
 			}
 		}
