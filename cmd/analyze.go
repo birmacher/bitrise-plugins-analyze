@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"bitrise-plugins-analyze/internal/analyzer"
-	"bitrise-plugins-analyze/internal/visualize"
+	"bitrise-plugins-analyze/appbundle"
+	"bitrise-plugins-analyze/appbundle/visualize"
 	"errors"
 	"io"
 	"os"
@@ -48,7 +48,7 @@ var analyzeCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		bundle, err := analyzer.AnalyzeBundlePath(app_path)
+		bundle, err := appbundle.AnalyzeBundlePath(app_path)
 		if err != nil {
 			return err
 		}

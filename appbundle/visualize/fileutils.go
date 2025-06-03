@@ -1,18 +1,18 @@
 package visualize
 
 import (
-	"bitrise-plugins-analyze/internal/analyzer"
+	"bitrise-plugins-analyze/appbundle"
 	"fmt"
 	"sort"
 	"strings"
 )
 
 // FindLargestFiles returns a sorted list of largest individual files
-func FindLargestFiles(root analyzer.FileInfo) []analyzer.FileInfo {
-	files := make([]analyzer.FileInfo, 0)
+func FindLargestFiles(root appbundle.FileInfo) []appbundle.FileInfo {
+	files := make([]appbundle.FileInfo, 0)
 
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
+	var traverse func(file appbundle.FileInfo)
+	traverse = func(file appbundle.FileInfo) {
 		if len(file.Children) == 0 && file.Size > 0 {
 			files = append(files, file)
 		}
@@ -32,7 +32,7 @@ func FindLargestFiles(root analyzer.FileInfo) []analyzer.FileInfo {
 }
 
 // CountFiles returns the number of files (non-directory nodes) in a FileInfo tree
-func CountFiles(root analyzer.FileInfo) int {
+func CountFiles(root appbundle.FileInfo) int {
 	count := 0
 	if len(root.Children) == 0 {
 		return 1
@@ -48,13 +48,13 @@ func CountFiles(root analyzer.FileInfo) int {
 }
 
 // FindLargestModules returns a sorted list of largest modules (directories)
-func FindLargestModules(root analyzer.FileInfo) []analyzer.FileInfo {
-	modules := make([]analyzer.FileInfo, 0)
+func FindLargestModules(root appbundle.FileInfo) []appbundle.FileInfo {
+	modules := make([]appbundle.FileInfo, 0)
 
 	// Process only children of root to skip the root directory itself
 	for _, child := range root.Children {
-		var traverse func(file analyzer.FileInfo)
-		traverse = func(file analyzer.FileInfo) {
+		var traverse func(file appbundle.FileInfo)
+		traverse = func(file appbundle.FileInfo) {
 			if len(file.Children) > 0 {
 				modules = append(modules, file)
 				for _, child := range file.Children {
@@ -81,12 +81,12 @@ type TypeBreakdown struct {
 }
 
 // CalculateTypeBreakdown returns a sorted list of size breakdowns by file type
-func CalculateTypeBreakdown(root analyzer.FileInfo) []TypeBreakdown {
+func CalculateTypeBreakdown(root appbundle.FileInfo) []TypeBreakdown {
 	breakdown := make(map[string]int64)
 	totalSize := root.Size
 
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
+	var traverse func(file appbundle.FileInfo)
+	traverse = func(file appbundle.FileInfo) {
 		if len(file.Children) == 0 {
 			fileType := file.Type
 			if fileType == "" {
@@ -122,20 +122,20 @@ func CalculateTypeBreakdown(root analyzer.FileInfo) []TypeBreakdown {
 
 // DuplicateGroup represents a group of duplicate files
 type DuplicateGroup struct {
-	Files         []analyzer.FileInfo `json:"files"`
-	Size          int64               `json:"size"`
-	WastedSpace   int64               `json:"wasted_space"`
-	TotalWasted   int64               `json:"total_wasted"`
-	WastedPercent float64             `json:"wasted_percent"`
+	Files         []appbundle.FileInfo `json:"files"`
+	Size          int64                `json:"size"`
+	WastedSpace   int64                `json:"wasted_space"`
+	TotalWasted   int64                `json:"total_wasted"`
+	WastedPercent float64              `json:"wasted_percent"`
 }
 
 // FindDuplicates returns groups of duplicate files sorted by size
-func FindDuplicates(root analyzer.FileInfo) []DuplicateGroup {
-	fileMap := make(map[string][]analyzer.FileInfo)
+func FindDuplicates(root appbundle.FileInfo) []DuplicateGroup {
+	fileMap := make(map[string][]appbundle.FileInfo)
 	totalSize := root.Size
 
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
+	var traverse func(file appbundle.FileInfo)
+	traverse = func(file appbundle.FileInfo) {
 		if len(file.Children) == 0 && file.Shasum != "" {
 			// Create a key combining size and shasum to identify duplicates
 			key := fmt.Sprintf("%d-%s", file.Size, file.Shasum)
@@ -180,12 +180,12 @@ func FindDuplicates(root analyzer.FileInfo) []DuplicateGroup {
 }
 
 // Find those resources that are not in the arsc file
-func FindMissingResources(bundle analyzer.AppBundle) []analyzer.FileInfo {
-	var missingResources []analyzer.FileInfo
+func FindMissingResources(bundle appbundle.AppBundle) []appbundle.FileInfo {
+	var missingResources []appbundle.FileInfo
 	// Copy bundle.Files to a new var
 
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
+	var traverse func(file appbundle.FileInfo)
+	traverse = func(file appbundle.FileInfo) {
 		if strings.HasPrefix(file.RelativePath, "res/") {
 			// get res/{type}/{name}.{extension}
 			parts := strings.Split(file.RelativePath, "/")

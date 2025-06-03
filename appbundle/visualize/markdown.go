@@ -1,7 +1,7 @@
 package visualize
 
 import (
-	"bitrise-plugins-analyze/internal/analyzer"
+	"bitrise-plugins-analyze/appbundle"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,7 +19,7 @@ type duplicateInfo struct {
 }
 
 // GenerateMarkdown generates a Markdown file containing the bundle analysis data
-func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
+func GenerateMarkdown(bundle *appbundle.AppBundle, outputDir string) error {
 	// Create Markdown file named after bundle ID
 	mdFileName := fmt.Sprintf("%s.md", bundle.BundleID)
 	mdPath := filepath.Join(outputDir, mdFileName)
@@ -192,11 +192,11 @@ func GenerateMarkdown(bundle *analyzer.AppBundle, outputDir string) error {
 }
 
 // findDuplicateFiles returns a map of SHA256 hashes to files with that hash
-func findDuplicateFiles(root analyzer.FileInfo) map[string][]analyzer.FileInfo {
-	duplicates := make(map[string][]analyzer.FileInfo)
+func findDuplicateFiles(root appbundle.FileInfo) map[string][]appbundle.FileInfo {
+	duplicates := make(map[string][]appbundle.FileInfo)
 
-	var traverse func(file analyzer.FileInfo)
-	traverse = func(file analyzer.FileInfo) {
+	var traverse func(file appbundle.FileInfo)
+	traverse = func(file appbundle.FileInfo) {
 		if len(file.Children) == 0 && file.Shasum != "" {
 			duplicates[file.Shasum] = append(duplicates[file.Shasum], file)
 		}
@@ -211,7 +211,7 @@ func findDuplicateFiles(root analyzer.FileInfo) map[string][]analyzer.FileInfo {
 }
 
 // getRelativePaths returns a list of relative paths for the given files
-func getRelativePaths(files []analyzer.FileInfo) []string {
+func getRelativePaths(files []appbundle.FileInfo) []string {
 	paths := make([]string, len(files))
 	for i, file := range files {
 		paths[i] = file.RelativePath

@@ -1,7 +1,7 @@
 package visualize
 
 import (
-	"bitrise-plugins-analyze/internal/analyzer"
+	"bitrise-plugins-analyze/appbundle"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,7 +9,7 @@ import (
 )
 
 // GenerateJSON generates a JSON file containing the bundle analysis data
-func GenerateJSON(bundle *analyzer.AppBundle, outputDir string) error {
+func GenerateJSON(bundle *appbundle.AppBundle, outputDir string) error {
 	// Create JSON file named after bundle ID
 	jsonFileName := fmt.Sprintf("%s.json", bundle.BundleID)
 	jsonPath := filepath.Join(outputDir, jsonFileName)

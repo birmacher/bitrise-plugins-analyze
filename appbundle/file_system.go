@@ -1,4 +1,4 @@
-package analyzer
+package appbundle
 
 import (
 	"crypto/sha256"

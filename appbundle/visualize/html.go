@@ -1,6 +1,7 @@
 package visualize
 
 import (
+	"bitrise-plugins-analyze/appbundle"
 	"bytes"
 	"embed"
 	"encoding/json"
@@ -9,8 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"bitrise-plugins-analyze/internal/analyzer"
 )
 
 //go:embed templates/template.html
@@ -26,11 +25,11 @@ type templateData struct {
 	DownloadSize     string
 	InstallSize      string
 	ChartData        template.JS
-	LargestFiles     []analyzer.FileInfo
-	LargestModules   []analyzer.FileInfo
+	LargestFiles     []appbundle.FileInfo
+	LargestModules   []appbundle.FileInfo
 	TypeBreakdown    []TypeBreakdown
 	Duplicates       []DuplicateGroup
-	MissingResources []analyzer.FileInfo
+	MissingResources []appbundle.FileInfo
 }
 
 // formatSize converts bytes to a human-readable string
@@ -48,7 +47,7 @@ func formatSize(bytes int64) string {
 }
 
 // GenerateHTML generates an HTML visualization of the bundle analysis
-func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
+func GenerateHTML(bundle *appbundle.AppBundle, outputDir string) error {
 	// Parse the template from the embedded file
 	tmpl, err := template.New("template.html").Funcs(template.FuncMap{
 		"formatSize": formatSize,
@@ -64,7 +63,7 @@ func GenerateHTML(bundle *analyzer.AppBundle, outputDir string) error {
 	}
 
 	// // Convert FileTree to JSON string to make it safe for JavaScript
-	// fileInfo, err := analyzer.FilesIncludingMetaInformation(bundle)
+	// fileInfo, err := appbundle.FilesIncludingMetaInformation(bundle)
 	// if err != nil {
 	// 	return fmt.Errorf("failed to get file info: %v", err)
 	// }
