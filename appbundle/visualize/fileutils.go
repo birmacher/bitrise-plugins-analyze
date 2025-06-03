@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/visualize"
 	"fmt"
 	"sort"
 	"strings"
@@ -73,15 +74,8 @@ func FindLargestModules(root core.FileInfo) []core.FileInfo {
 	return modules
 }
 
-// TypeBreakdown represents size information for a specific file type
-type TypeBreakdown struct {
-	Type       string  `json:"type"`
-	Size       int64   `json:"size"`
-	Percentage float64 `json:"percentage"`
-}
-
 // CalculateTypeBreakdown returns a sorted list of size breakdowns by file type
-func CalculateTypeBreakdown(root core.FileInfo) []TypeBreakdown {
+func CalculateTypeBreakdown(root core.FileInfo) []visualize.TypeBreakdown {
 	breakdown := make(map[string]int64)
 	totalSize := root.Size
 
@@ -102,10 +96,10 @@ func CalculateTypeBreakdown(root core.FileInfo) []TypeBreakdown {
 	traverse(root)
 
 	// Convert map to slice and calculate percentages
-	result := make([]TypeBreakdown, 0, len(breakdown))
+	result := make([]visualize.TypeBreakdown, 0, len(breakdown))
 	for fileType, size := range breakdown {
 		percentage := float64(size) / float64(totalSize) * 100
-		result = append(result, TypeBreakdown{
+		result = append(result, visualize.TypeBreakdown{
 			Type:       fileType,
 			Size:       size,
 			Percentage: percentage,
@@ -120,17 +114,8 @@ func CalculateTypeBreakdown(root core.FileInfo) []TypeBreakdown {
 	return result
 }
 
-// DuplicateGroup represents a group of duplicate files
-type DuplicateGroup struct {
-	Files         []core.FileInfo `json:"files"`
-	Size          int64           `json:"size"`
-	WastedSpace   int64           `json:"wasted_space"`
-	TotalWasted   int64           `json:"total_wasted"`
-	WastedPercent float64         `json:"wasted_percent"`
-}
-
 // FindDuplicates returns groups of duplicate files sorted by size
-func FindDuplicates(root core.FileInfo) []DuplicateGroup {
+func FindDuplicates(root core.FileInfo) []visualize.DuplicateGroup {
 	fileMap := make(map[string][]core.FileInfo)
 	totalSize := root.Size
 
@@ -149,7 +134,7 @@ func FindDuplicates(root core.FileInfo) []DuplicateGroup {
 	traverse(root)
 
 	// Convert map to slice of DuplicateGroup
-	duplicates := make([]DuplicateGroup, 0)
+	duplicates := make([]visualize.DuplicateGroup, 0)
 	var totalWastedSpace int64
 
 	for _, files := range fileMap {
@@ -157,7 +142,7 @@ func FindDuplicates(root core.FileInfo) []DuplicateGroup {
 			wastedSpace := files[0].Size * int64(len(files)-1)
 			totalWastedSpace += wastedSpace
 
-			duplicates = append(duplicates, DuplicateGroup{
+			duplicates = append(duplicates, visualize.DuplicateGroup{
 				Files:       files,
 				Size:        files[0].Size,
 				WastedSpace: wastedSpace,

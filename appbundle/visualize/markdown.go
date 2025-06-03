@@ -5,18 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
-
-// duplicateInfo represents information about duplicate content
-type duplicateInfo struct {
-	name        string   // file name or asset name
-	size        int64    // size of the duplicate
-	occurrences int      // number of occurrences
-	locations   []string // where the duplicates are found
-	isAsset     bool     // whether this is an asset catalog duplicate
-}
 
 // GenerateMarkdown generates a Markdown file containing the bundle analysis data
 func GenerateMarkdown(bundle *core.AppBundle, outputDir string) error {
@@ -75,94 +65,36 @@ func GenerateMarkdown(bundle *core.AppBundle, outputDir string) error {
 			formatSize(file.Size),
 			percentage))
 	}
-	content.WriteString("</details>\n")
+	content.WriteString("</details>\n\n")
 
 	// Collect all duplicates
-	var allDuplicates []duplicateInfo
-
-	// Add filesystem duplicates
-	fsDuplicates := findDuplicateFiles(bundle.Files)
-	for _, files := range fsDuplicates {
-		if len(files) > 1 {
-			allDuplicates = append(allDuplicates, duplicateInfo{
-				name:        filepath.Base(files[0].RelativePath),
-				size:        files[0].Size,
-				occurrences: len(files),
-				locations:   getRelativePaths(files),
-				isAsset:     false,
-			})
-		}
-	}
-
-	// Add CAR file duplicates
-	if len(bundle.CarFiles) > 0 {
-		assetDuplicates := make(map[string]*duplicateInfo)
-
-		for _, car := range bundle.CarFiles {
-			for _, asset := range car.Assets {
-				for _, rendition := range asset.RenditionInfo {
-					if rendition.Shasum != "" {
-						key := fmt.Sprintf("%s:%s", asset.Name, rendition.Shasum)
-						info, exists := assetDuplicates[key]
-						if !exists {
-							info = &duplicateInfo{
-								name:        asset.Name,
-								size:        rendition.Size,
-								occurrences: 0,
-								locations:   make([]string, 0),
-								isAsset:     true,
-							}
-							assetDuplicates[key] = info
-						}
-						info.occurrences++
-						info.locations = append(info.locations,
-							fmt.Sprintf("%s (%s)", car.Path, rendition.RenditionName))
-					}
-				}
-			}
-		}
-
-		// Add asset duplicates to the main list
-		for _, info := range assetDuplicates {
-			if info.occurrences > 1 {
-				allDuplicates = append(allDuplicates, *info)
-			}
-		}
-	}
-
-	// Sort duplicates by size
-	sort.Slice(allDuplicates, func(i, j int) bool {
-		return allDuplicates[i].size > allDuplicates[j].size
-	})
+	duplicates := FindDuplicates(bundle.Files)
 
 	// Write combined duplicates table
-	if len(allDuplicates) > 0 {
-		content.WriteString("## 🔄 Duplicate Content\n\n")
+	if len(duplicates) > 0 {
 		content.WriteString("<details>\n")
+		content.WriteString(fmt.Sprintf("<summary>🔄 %d duplicate items found</summary>\n\n", len(duplicates)))
 
 		// Calculate total size of duplicates
 		totalDuplicateSize := int64(0)
-		for _, dup := range allDuplicates {
-			totalDuplicateSize += dup.size * int64(dup.occurrences-1) // Count only the duplicate space
+		for _, group := range duplicates {
+			totalDuplicateSize += group.Size * int64(len(group.Files)-1) // Only count wasted space
 		}
 
-		content.WriteString(fmt.Sprintf("<summary>Found %d duplicated items wasting %s of space, click to expand</summary>\n\n",
-			len(allDuplicates), formatSize(totalDuplicateSize)))
 		content.WriteString("| Name | Type | Size | Occurrences | Locations |\n")
 		content.WriteString("|------|------|------|-------------|------------|\n")
 
-		for _, dup := range allDuplicates {
-			contentType := "File"
-			if dup.isAsset {
-				contentType = "Asset"
+		for _, group := range duplicates {
+			locations := make([]string, len(group.Files))
+			for i, f := range group.Files {
+				locations[i] = f.RelativePath
 			}
-
 			content.WriteString(fmt.Sprintf("| %s | %s | %s | %d | %s |\n",
-				dup.name,
-				contentType,
-				formatSize(dup.size),
-				dup.occurrences,
-				strings.Join(dup.locations, "<br>")))
+				filepath.Base(group.Files[0].RelativePath),
+				group.Files[0].Type,
+				formatSize(group.Size),
+				len(group.Files),
+				strings.Join(locations, "<br>")))
 		}
 		content.WriteString("\n</details>\n\n")
 	}

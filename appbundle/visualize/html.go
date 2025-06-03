@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/visualize"
 	"bytes"
 	"embed"
 	"encoding/json"
@@ -27,8 +28,8 @@ type templateData struct {
 	ChartData        template.JS
 	LargestFiles     []core.FileInfo
 	LargestModules   []core.FileInfo
-	TypeBreakdown    []TypeBreakdown
-	Duplicates       []DuplicateGroup
+	TypeBreakdown    []visualize.TypeBreakdown
+	Duplicates       []visualize.DuplicateGroup
 	MissingResources []core.FileInfo
 }
 
