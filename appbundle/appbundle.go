@@ -138,6 +138,12 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 		}
 	}
 
+	// Analyze images
+	err = android.AnalyzeImages(unzipedApkDir, manifest)
+	if err != nil {
+		return err
+	}
+
 	// Calculate sizes
 	bundle.InstallSize = files.Size
 

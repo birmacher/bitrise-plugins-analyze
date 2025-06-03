@@ -10,26 +10,27 @@ import (
 	"strings"
 )
 
-func ParseAndroidManifest(apkPath string) (*android.AndroidManifest, error) {
+func ParseAndroidManifest(apkPath string) (android.AndroidManifest, error) {
+	var manifest android.AndroidManifest
+
 	// Path to the apkanalyzer tool
 	apkanalyzerPath := filepath.Join(os.Getenv("HOME"), "Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer")
 
 	// Check if apkanalyzer exists
 	if _, err := os.Stat(apkanalyzerPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("apkanalyzer not found at %s", apkanalyzerPath)
+		return manifest, fmt.Errorf("apkanalyzer not found at %s", apkanalyzerPath)
 	}
 
 	// Prepare the command to extract AndroidManifest.xml
 	cmd := exec.Command(apkanalyzerPath, "manifest", "print", apkPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute apkanalyzer: %v, output: %s", err, string(output))
+		return manifest, fmt.Errorf("failed to execute apkanalyzer: %v, output: %s", err, string(output))
 	}
 
 	// Parse the XML output into the AndroidManifest struct
-	var manifest android.AndroidManifest
 	if err := xml.Unmarshal(output, &manifest); err != nil {
-		return nil, fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
+		return manifest, fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
 	}
 
 	// If version code or name are empty, try to extract them with more specific commands
@@ -58,5 +59,5 @@ func ParseAndroidManifest(apkPath string) (*android.AndroidManifest, error) {
 		}
 	}
 
-	return &manifest, nil
+	return manifest, nil
 }

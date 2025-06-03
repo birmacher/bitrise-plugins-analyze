@@ -10,4 +10,7 @@ type AndroidManifest struct {
 	Application struct {
 		Label string `xml:"label,attr"`
 	} `xml:"application"`
+	UsesSdk struct {
+		MinSdk int `xml:"minSdkVersion,attr"`
+	} `xml:"uses-sdk"`
 }
