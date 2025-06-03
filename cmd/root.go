@@ -7,7 +7,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Short: "Bitrise CLI Plugin: Build Annotations",
+	Short: "Bitrise CLI Plugin: App Bundle Analyzer",
 }
 
 func Execute() {
