@@ -1,6 +1,7 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 
 // AnalyzeInfoPlist reads and parses the Info.plist file from the provided path
 // and updates the AppBundle with the extracted information
-func AnalyzeInfoPlist(bundlePath string, bundle *AppBundle) error {
+func AnalyzeInfoPlist(bundlePath string, bundle *core.AppBundle) error {
 	infoPlistPath := filepath.Join(bundlePath, "Info.plist")
 
 	f, err := os.Open(infoPlistPath)

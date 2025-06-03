@@ -1,7 +1,7 @@
 package visualize
 
 import (
-	"bitrise-plugins-analyze/appbundle"
+	"bitrise-plugins-analyze/appbundle/core"
 	"bytes"
 	"embed"
 	"encoding/json"
@@ -25,11 +25,11 @@ type templateData struct {
 	DownloadSize     string
 	InstallSize      string
 	ChartData        template.JS
-	LargestFiles     []appbundle.FileInfo
-	LargestModules   []appbundle.FileInfo
+	LargestFiles     []core.FileInfo
+	LargestModules   []core.FileInfo
 	TypeBreakdown    []TypeBreakdown
 	Duplicates       []DuplicateGroup
-	MissingResources []appbundle.FileInfo
+	MissingResources []core.FileInfo
 }
 
 // formatSize converts bytes to a human-readable string
@@ -47,7 +47,7 @@ func formatSize(bytes int64) string {
 }
 
 // GenerateHTML generates an HTML visualization of the bundle analysis
-func GenerateHTML(bundle *appbundle.AppBundle, outputDir string) error {
+func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 	// Parse the template from the embedded file
 	tmpl, err := template.New("template.html").Funcs(template.FuncMap{
 		"formatSize": formatSize,

@@ -1,13 +1,15 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/android"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
-func analyzeAndroidBundle(bundle_path string) (*AppBundle, error) {
+func analyzeAndroidBundle(bundle_path string) (*core.AppBundle, error) {
 	ext := filepath.Ext(bundle_path)
 
 	if ext == ApkExtension {
@@ -26,9 +28,9 @@ func analyzeAndroidBundle(bundle_path string) (*AppBundle, error) {
 	return nil, fmt.Errorf("unsupported Android file type: %s", ext)
 }
 
-func analyzeApk(apkPath string) (*AppBundle, error) {
+func analyzeApk(apkPath string) (*core.AppBundle, error) {
 	// Create bundle info
-	bundle := &AppBundle{}
+	bundle := &core.AppBundle{}
 
 	// Parse AndroidManifest.xml using apkanalyzer
 	manifest, err := parseAndroidManifest(apkPath)
@@ -67,7 +69,7 @@ func analyzeApk(apkPath string) (*AppBundle, error) {
 		return nil, fmt.Errorf("failed to analyze ARSC files: %v", err)
 	} else {
 		for resourceId, res := range arscResources {
-			bundle.AsrcFiles = append(bundle.AsrcFiles, AsrcFile{
+			bundle.AsrcFiles = append(bundle.AsrcFiles, android.AsrcFile{
 				ResourceId: resourceId,
 				Type:       res["type"],
 				Name:       res["name"],

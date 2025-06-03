@@ -1,6 +1,8 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/ios"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,19 +10,8 @@ import (
 	"strings"
 )
 
-// MachOInfo represents information about a Mach-O binary
-type MachOInfo struct {
-	Path         string   `json:"path"`
-	Architecture []string `json:"architecture"`
-	LoadCommands []string `json:"load_commands,omitempty"`
-	MinOSVersion string   `json:"min_os_version,omitempty"`
-	LinkedLibs   []string `json:"linked_libraries,omitempty"`
-	RPaths       []string `json:"rpaths,omitempty"`
-	Size         int64    `json:"size"`
-}
-
 // FindAndAnalyzeMachO searches for and analyzes Mach-O binaries in the bundle
-func FindAndAnalyzeMachO(bundlePath string, bundle *AppBundle) error {
+func FindAndAnalyzeMachO(bundlePath string, bundle *core.AppBundle) error {
 	// Check if otool exists
 	if _, err := exec.LookPath("otool"); err != nil {
 		return fmt.Errorf("otool not found: this tool requires macOS")
@@ -63,8 +54,8 @@ func FindAndAnalyzeMachO(bundlePath string, bundle *AppBundle) error {
 }
 
 // analyzeMachO analyzes a single Mach-O binary using otool
-func analyzeMachO(path string) (*MachOInfo, error) {
-	info := &MachOInfo{
+func analyzeMachO(path string) (*ios.MachOInfo, error) {
+	info := &ios.MachOInfo{
 		Path: path,
 	}
 

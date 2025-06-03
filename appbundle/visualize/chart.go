@@ -1,7 +1,7 @@
 package visualize
 
 import (
-	"bitrise-plugins-analyze/appbundle"
+	"bitrise-plugins-analyze/appbundle/core"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -15,7 +15,7 @@ type Chart struct {
 	Ids     []string `json:"ids"`
 }
 
-func GeneratePlotlyChart(bundle *appbundle.AppBundle) Chart {
+func GeneratePlotlyChart(bundle *core.AppBundle) Chart {
 	ExpandAndroidFiles(bundle)
 
 	chart := Chart{
@@ -26,8 +26,8 @@ func GeneratePlotlyChart(bundle *appbundle.AppBundle) Chart {
 		Ids:     []string{},
 	}
 
-	var traverseFiles func(files appbundle.FileInfo, parent string)
-	traverseFiles = func(files appbundle.FileInfo, parent string) {
+	var traverseFiles func(files core.FileInfo, parent string)
+	traverseFiles = func(files core.FileInfo, parent string) {
 		if parent == "" {
 			chart.Labels = append(chart.Labels, bundle.AppName)
 			chart.Values = append(chart.Values, bundle.InstallSize)
@@ -48,11 +48,11 @@ func GeneratePlotlyChart(bundle *appbundle.AppBundle) Chart {
 	return chart
 }
 
-func ExpandAndroidFiles(bundle *appbundle.AppBundle) {
+func ExpandAndroidFiles(bundle *core.AppBundle) {
 	ExpandDexFiles(bundle)
 }
 
-func ExpandDexFiles(bundle *appbundle.AppBundle) {
+func ExpandDexFiles(bundle *core.AppBundle) {
 	// Calculate total .dex file sizes
 	// Dex files are located at the root level
 	totalDexSize := int64(0)
@@ -64,11 +64,11 @@ func ExpandDexFiles(bundle *appbundle.AppBundle) {
 		}
 	}
 	// add a new root level file for dex files
-	dexFileInfo := appbundle.FileInfo{
+	dexFileInfo := core.FileInfo{
 		RelativePath: "dex",
 		Type:         "directory",
 		Size:         totalDexSize,
-		Children:     make([]appbundle.FileInfo, 0),
+		Children:     make([]core.FileInfo, 0),
 	}
 
 	dexPackageSizes := int64(0)
@@ -99,32 +99,32 @@ func ExpandDexFiles(bundle *appbundle.AppBundle) {
 				}
 			}
 			if !exists {
-				parent.Children = append(parent.Children, appbundle.FileInfo{
+				parent.Children = append(parent.Children, core.FileInfo{
 					RelativePath: intermediatePath,
 					Type:         "directory",
 					Size:         dexPackage.Size,
-					Children:     make([]appbundle.FileInfo, 0),
+					Children:     make([]core.FileInfo, 0),
 				})
 				parent = &parent.Children[len(parent.Children)-1]
 			}
 		}
 
-		parent.Children = append(parent.Children, appbundle.FileInfo{
+		parent.Children = append(parent.Children, core.FileInfo{
 			RelativePath: filepath.Join(dexPackagePath, strings.ReplaceAll(dexPackage.GetPath(), "/", ".")),
 			Type:         "Dex",
 			Size:         dexPackage.Size,
-			Children:     make([]appbundle.FileInfo, 0),
+			Children:     make([]core.FileInfo, 0),
 		})
 		dexPackageSizes += dexPackage.Size
 	}
 
 	// Add Unmapped dex file size if there are any
 	if totalDexSize-dexPackageSizes > 0 {
-		dexFileInfo.Children = append(dexFileInfo.Children, appbundle.FileInfo{
+		dexFileInfo.Children = append(dexFileInfo.Children, core.FileInfo{
 			RelativePath: "dex/Unmapped dex",
 			Type:         "Dex",
 			Size:         totalDexSize - dexPackageSizes,
-			Children:     make([]appbundle.FileInfo, 0),
+			Children:     make([]core.FileInfo, 0),
 		})
 	}
 
@@ -134,7 +134,7 @@ func ExpandDexFiles(bundle *appbundle.AppBundle) {
 	bundle.Files.Children = append(bundle.Files.Children, dexFileInfo)
 }
 
-func simplifyDirectory(children []appbundle.FileInfo) []appbundle.FileInfo {
+func simplifyDirectory(children []core.FileInfo) []core.FileInfo {
 	for i, child := range children {
 		children[i].Children = simplifyDirectory(child.Children)
 	}

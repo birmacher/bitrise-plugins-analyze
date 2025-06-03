@@ -1,6 +1,7 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -10,26 +11,18 @@ import (
 	"strings"
 )
 
-type FileInfo struct {
-	RelativePath string     `json:"relative_path"`
-	Size         int64      `json:"size"`
-	Shasum       string     `json:"shasum"`
-	Type         string     `json:"type"`
-	Children     []FileInfo `json:"children,omitempty"`
-}
-
-func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
+func AnalyzeFile(filePath string, basePath string) (core.FileInfo, error) {
 	info, err := os.Stat(filePath)
 	if err != nil {
-		return FileInfo{}, fmt.Errorf("failed to get file info: %v", err)
+		return core.FileInfo{}, fmt.Errorf("failed to get file info: %v", err)
 	}
 
 	relativePath, err := filepath.Rel(basePath, filePath)
 	if err != nil {
-		return FileInfo{}, fmt.Errorf("failed to get relative path: %v", err)
+		return core.FileInfo{}, fmt.Errorf("failed to get relative path: %v", err)
 	}
 
-	fileInfo := FileInfo{
+	fileInfo := core.FileInfo{
 		RelativePath: relativePath,
 		Type:         getFileType(info),
 	}
@@ -38,7 +31,7 @@ func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 	if info.IsDir() {
 		entries, err := os.ReadDir(filePath)
 		if err != nil {
-			return FileInfo{}, fmt.Errorf("failed to read directory: %v", err)
+			return core.FileInfo{}, fmt.Errorf("failed to read directory: %v", err)
 		}
 
 		var totalSize int64
@@ -47,7 +40,7 @@ func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 			childPath := filepath.Join(filePath, entry.Name())
 			childInfo, err := AnalyzeFile(childPath, basePath)
 			if err != nil {
-				return FileInfo{}, err
+				return core.FileInfo{}, err
 			}
 			fileInfo.Children = append(fileInfo.Children, childInfo)
 			totalSize += childInfo.Size
@@ -68,7 +61,7 @@ func AnalyzeFile(filePath string, basePath string) (FileInfo, error) {
 		// Calculate SHA256 for files
 		shasum, err := calculateSHA256(filePath)
 		if err != nil {
-			return FileInfo{}, fmt.Errorf("failed to calculate SHA256: %v", err)
+			return core.FileInfo{}, fmt.Errorf("failed to calculate SHA256: %v", err)
 		}
 		fileInfo.Shasum = shasum
 	}

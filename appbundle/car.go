@@ -1,6 +1,8 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/ios"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,27 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 )
-
-type RenditionInfo struct {
-	RenditionName string `json:"rendition_name"`
-	Size          int64  `json:"size"`
-	Idiom         string `json:"idiom"`
-	Scale         int64  `json:"scale"`
-	Compression   string `json:"compression"`
-	Shasum        string `json:"shasum"`
-}
-
-// AssetInfo represents information about an asset in the .car file
-type AssetInfo struct {
-	Name          string          `json:"name"`
-	RenditionInfo []RenditionInfo `json:"rendition_info"`
-}
-
-// CarFileInfo represents the analyzed contents of a .car file
-type CarFileInfo struct {
-	Path   string      `json:"path"`
-	Assets []AssetInfo `json:"assets"`
-}
 
 // AssetsutilCatalog represents the JSON structure returned by assetutil
 type AssetsutilCatalog struct {
@@ -44,7 +25,7 @@ type AssetsutilCatalog struct {
 
 // TODO: Add "Other" for the remaining size
 // ParseCARFile uses assetutil to analyze the .car file and returns structured information
-func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
+func ParseCARFile(path string, basePath string) (*ios.CarFileInfo, error) {
 	// Check if assetutil exists
 	if _, err := exec.LookPath("assetutil"); err != nil {
 		return nil, fmt.Errorf("assetutil not found: this tool requires macOS")
@@ -64,7 +45,7 @@ func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 	}
 
 	// Group renditions by name
-	assetMap := make(map[string]*AssetInfo)
+	assetMap := make(map[string]*ios.AssetInfo)
 	for _, catalog := range catalogs {
 		if catalog.SizeOnDisk == 0 {
 			continue
@@ -82,9 +63,9 @@ func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 		}
 		asset, exists := assetMap[name]
 		if !exists {
-			asset = &AssetInfo{
+			asset = &ios.AssetInfo{
 				Name:          catalog.Name,
-				RenditionInfo: make([]RenditionInfo, 0),
+				RenditionInfo: make([]ios.RenditionInfo, 0),
 			}
 			assetMap[catalog.Name] = asset
 		}
@@ -99,7 +80,7 @@ func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 		if renditionName == "" {
 			renditionName = catalog.SHA1Digest
 		}
-		rendition := RenditionInfo{
+		rendition := ios.RenditionInfo{
 			RenditionName: renditionName,
 			Size:          catalog.SizeOnDisk,
 			Idiom:         catalog.Idiom,
@@ -111,7 +92,7 @@ func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 	}
 
 	// Convert map to slice
-	assets := make([]AssetInfo, 0, len(assetMap))
+	assets := make([]ios.AssetInfo, 0, len(assetMap))
 	for _, asset := range assetMap {
 		assets = append(assets, *asset)
 	}
@@ -121,14 +102,14 @@ func ParseCARFile(path string, basePath string) (*CarFileInfo, error) {
 		return nil, fmt.Errorf("failed to get relative path: %v", err)
 	}
 
-	return &CarFileInfo{
+	return &ios.CarFileInfo{
 		Path:   relativePath,
 		Assets: assets,
 	}, nil
 }
 
 // FindAndAnalyzeCarFiles searches for and analyzes all .car files in the bundle
-func FindAndAnalyzeCarFiles(bundlePath string, bundle *AppBundle) error {
+func FindAndAnalyzeCarFiles(bundlePath string, bundle *core.AppBundle) error {
 	err := filepath.Walk(bundlePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

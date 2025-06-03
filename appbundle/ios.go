@@ -1,13 +1,14 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func analyzeIOSBundle(bundle_path string) (*AppBundle, error) {
+func analyzeIOSBundle(bundle_path string) (*core.AppBundle, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var app_path string

@@ -1,6 +1,7 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,7 @@ const (
 	AabExtension       = ".aab"
 )
 
-func AnalyzeBundlePath(bundle_path string) (*AppBundle, error) {
+func AnalyzeBundlePath(bundle_path string) (*core.AppBundle, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	switch ext {

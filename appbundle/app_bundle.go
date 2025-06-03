@@ -1,6 +1,8 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/ios"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,25 +11,9 @@ import (
 	"strings"
 )
 
-// AppBundle represents an analyzed application bundle
-type AppBundle struct {
-	DownloadSize       int64         `json:"download_size"`
-	InstallSize        int64         `json:"install_size"`
-	BundleID           string        `json:"bundle_id"`
-	SupportedPlatforms []string      `json:"supported_platforms"`
-	Version            string        `json:"version"`
-	MinimumOSVersion   string        `json:"minimum_os_version"`
-	AppName            string        `json:"app_name"`
-	Files              FileInfo      `json:"files"`
-	CarFiles           []CarFileInfo `json:"car_files,omitempty"`
-	MachOFiles         []MachOInfo   `json:"mach_o_files,omitempty"`
-	DexPackages        []DexPackage  `json:"dex_files,omitempty"`
-	AsrcFiles          []AsrcFile    `json:"arsc_files,omitempty"`
-}
-
 // AnalyzeAppBundle analyzes the provided app bundle directory and returns the analysis results
-func AnalyzeAppBundle(bundlePath string) (*AppBundle, error) {
-	bundle := &AppBundle{}
+func AnalyzeAppBundle(bundlePath string) (*core.AppBundle, error) {
+	bundle := &core.AppBundle{}
 
 	// Analyze the files in the bundle
 	files, err := AnalyzeFile(bundlePath, bundlePath)
@@ -110,7 +96,7 @@ func calculateInstallSize(bundlePath string) (int64, error) {
 	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
 }
 
-func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
+func FilesIncludingMetaInformation(bundle *core.AppBundle) (core.FileInfo, error) {
 	extendedFiles := bundle.Files
 
 	// For each CAR file, find matching file in extendedFiles and add asset info as children
@@ -121,21 +107,21 @@ func FilesIncludingMetaInformation(bundle *AppBundle) (FileInfo, error) {
 	return extendedFiles, nil
 }
 
-func addCarFilesToMetaInformation(files *FileInfo, carFile CarFileInfo) bool {
+func addCarFilesToMetaInformation(files *core.FileInfo, carFile ios.CarFileInfo) bool {
 	if files.RelativePath == carFile.Path {
 
 		// Add each asset as a child
 		for _, asset := range carFile.Assets {
 			assetPath := filepath.Join(carFile.Path, asset.Name)
-			assetInfo := FileInfo{
+			assetInfo := core.FileInfo{
 				RelativePath: assetPath,
 				Type:         "image",
-				Children:     make([]FileInfo, 0),
+				Children:     make([]core.FileInfo, 0),
 			}
 
 			// Add renditions as children of the asset
 			for _, rendition := range asset.RenditionInfo {
-				renditionInfo := FileInfo{
+				renditionInfo := core.FileInfo{
 					RelativePath: filepath.Join(assetPath, fmt.Sprintf("%s @ %dx (%s)", rendition.RenditionName, rendition.Scale, rendition.Idiom)),
 					Size:         rendition.Size,
 					Shasum:       rendition.Shasum,

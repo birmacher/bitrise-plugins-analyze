@@ -1,32 +1,15 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/core/android"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-type DexClass struct {
-	Name   string `json:"name"`
-	Size   int64  `json:"size"`
-	Shasum string `json:"shasum"`
-}
-
-type DexPackage struct {
-	Name    string     `json:"name"`
-	Size    int64      `json:"size"`
-	Classes []DexClass `json:"classes"`
-}
-
-type AsrcFile struct {
-	ResourceId string `json:"resource_id"`
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-}
-
-func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
-	allPackages := []DexPackage{}
+func analyzeDexFiles(unzipedApkDir string) ([]android.DexPackage, error) {
+	allPackages := []android.DexPackage{}
 
 	// Walk through the APK path directory
 	err := filepath.Walk(unzipedApkDir, func(path string, info os.FileInfo, err error) error {
@@ -74,7 +57,7 @@ func analyzeDexFiles(unzipedApkDir string) ([]DexPackage, error) {
 	return allPackages, nil
 }
 
-func addClassToPackage(dexPackages *[]DexPackage, packageName, className string, size int64) {
+func addClassToPackage(dexPackages *[]android.DexPackage, packageName, className string, size int64) {
 	var pkgIdx int = -1
 	for i := range *dexPackages {
 		if (*dexPackages)[i].Name == packageName {
@@ -84,28 +67,18 @@ func addClassToPackage(dexPackages *[]DexPackage, packageName, className string,
 	}
 	if pkgIdx == -1 {
 		// Not found, create a new one and append
-		*dexPackages = append(*dexPackages, DexPackage{
+		*dexPackages = append(*dexPackages, android.DexPackage{
 			Name:    packageName,
 			Size:    0,
-			Classes: make([]DexClass, 0),
+			Classes: make([]android.DexClass, 0),
 		})
 		pkgIdx = len(*dexPackages) - 1
 	}
 	// Add the class to the package via slice index
-	(*dexPackages)[pkgIdx].Classes = append((*dexPackages)[pkgIdx].Classes, DexClass{
+	(*dexPackages)[pkgIdx].Classes = append((*dexPackages)[pkgIdx].Classes, android.DexClass{
 		Name:   className,
 		Size:   size,
 		Shasum: "", // SHA256 will be calculated later
 	})
 	(*dexPackages)[pkgIdx].Size += size
-}
-
-func (dexPackage DexPackage) GetPath() string {
-	return dexPackage.Name
-
-}
-
-func (dexClass DexClass) GetPath(dexPackage DexPackage) string {
-	return filepath.Join(dexPackage.GetPath(), dexClass.Name)
-
 }
