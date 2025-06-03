@@ -7,21 +7,13 @@ import (
 	"strings"
 )
 
-const (
-	AppExtension       = ".app"
-	IpaExtension       = ".ipa"
-	XcarchiveExtension = ".xcarchive"
-	ApkExtension       = ".apk"
-	AabExtension       = ".aab"
-)
-
 func AnalyzeBundlePath(bundle_path string) (*core.AppBundle, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	switch ext {
-	case AppExtension, IpaExtension, XcarchiveExtension:
+	case core.AppExtension, core.IpaExtension, core.XcarchiveExtension:
 		return analyzeIOSBundle(bundle_path)
-	case ApkExtension, AabExtension:
+	case core.ApkExtension, core.AabExtension:
 		return analyzeAndroidBundle(bundle_path)
 	default:
 		return nil, fmt.Errorf("unsupported file extension: %s", ext)

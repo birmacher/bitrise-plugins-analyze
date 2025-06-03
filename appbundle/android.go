@@ -1,8 +1,9 @@
 package appbundle
 
 import (
+	"bitrise-plugins-analyze/appbundle/android"
 	"bitrise-plugins-analyze/appbundle/core"
-	"bitrise-plugins-analyze/appbundle/core/android"
+	androidcore "bitrise-plugins-analyze/appbundle/core/android"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,9 +13,9 @@ import (
 func analyzeAndroidBundle(bundle_path string) (*core.AppBundle, error) {
 	ext := filepath.Ext(bundle_path)
 
-	if ext == ApkExtension {
+	if ext == core.ApkExtension {
 		return analyzeApk(bundle_path)
-	} else if ext == AabExtension {
+	} else if ext == core.AabExtension {
 		bundle_path, err := analyzeAab(bundle_path)
 		defer os.RemoveAll(bundle_path)
 
@@ -33,7 +34,7 @@ func analyzeApk(apkPath string) (*core.AppBundle, error) {
 	bundle := &core.AppBundle{}
 
 	// Parse AndroidManifest.xml using apkanalyzer
-	manifest, err := parseAndroidManifest(apkPath)
+	manifest, err := android.ParseAndroidManifest(apkPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
 	}
@@ -69,7 +70,7 @@ func analyzeApk(apkPath string) (*core.AppBundle, error) {
 		return nil, fmt.Errorf("failed to analyze ARSC files: %v", err)
 	} else {
 		for resourceId, res := range arscResources {
-			bundle.AsrcFiles = append(bundle.AsrcFiles, android.AsrcFile{
+			bundle.AsrcFiles = append(bundle.AsrcFiles, androidcore.AsrcFile{
 				ResourceId: resourceId,
 				Type:       res["type"],
 				Name:       res["name"],

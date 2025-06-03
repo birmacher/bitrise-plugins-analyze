@@ -20,11 +20,11 @@ func analyzeIOSBundle(bundle_path string) (*core.AppBundle, error) {
 	}()
 	var err error
 	switch ext {
-	case AppExtension:
+	case core.AppExtension:
 		app_path = bundle_path
-	case IpaExtension:
+	case core.IpaExtension:
 		app_path, tempDir, err = analyzeIpa(bundle_path)
-	case XcarchiveExtension:
+	case core.XcarchiveExtension:
 		app_path, err = analyzeXcarchive(bundle_path)
 	default:
 		return nil, fmt.Errorf("unsupported file extension: %s", ext)

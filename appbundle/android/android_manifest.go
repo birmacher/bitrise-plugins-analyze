@@ -1,6 +1,7 @@
-package appbundle
+package android
 
 import (
+	"bitrise-plugins-analyze/appbundle/core/android"
 	"encoding/xml"
 	"fmt"
 	"os"
@@ -9,17 +10,7 @@ import (
 	"strings"
 )
 
-type AndroidManifest struct {
-	XMLName     xml.Name `xml:"manifest"`
-	Package     string   `xml:"package,attr"`
-	VersionCode string   `xml:"versionCode,attr"`
-	VersionName string   `xml:"versionName,attr"`
-	Application struct {
-		Label string `xml:"label,attr"`
-	} `xml:"application"`
-}
-
-func parseAndroidManifest(apkPath string) (*AndroidManifest, error) {
+func ParseAndroidManifest(apkPath string) (*android.AndroidManifest, error) {
 	// Path to the apkanalyzer tool
 	apkanalyzerPath := filepath.Join(os.Getenv("HOME"), "Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer")
 
@@ -36,7 +27,7 @@ func parseAndroidManifest(apkPath string) (*AndroidManifest, error) {
 	}
 
 	// Parse the XML output into the AndroidManifest struct
-	var manifest AndroidManifest
+	var manifest android.AndroidManifest
 	if err := xml.Unmarshal(output, &manifest); err != nil {
 		return nil, fmt.Errorf("failed to parse AndroidManifest.xml: %v", err)
 	}
