@@ -99,6 +99,22 @@ func GenerateMarkdown(bundle *core.AppBundle, outputDir string) error {
 		content.WriteString("\n</details>\n\n")
 	}
 
+	// add images to be converted
+	if len(bundle.OversizedImages) > 0 {
+		content.WriteString("\n<details>\n")
+		content.WriteString("<summary>♻️ Convert images</summary>\n\n")
+		content.WriteString("| Resource | Convert to | Original Size | Saving |\n")
+		content.WriteString("|----------|------|------|------|\n")
+		for _, oversizeImg := range bundle.OversizedImages {
+			content.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n",
+				oversizeImg.RelativePath,
+				oversizeImg.ConvertedTo,
+				formatSize(oversizeImg.OriginalSize),
+				formatSize(oversizeImg.Saving)))
+		}
+		content.WriteString("</details>\n\n")
+	}
+
 	// Add missing resources section
 	missingResources := FindMissingResources(*bundle)
 	if len(missingResources) > 0 {
@@ -121,32 +137,4 @@ func GenerateMarkdown(bundle *core.AppBundle, outputDir string) error {
 	}
 
 	return nil
-}
-
-// findDuplicateFiles returns a map of SHA256 hashes to files with that hash
-func findDuplicateFiles(root core.FileInfo) map[string][]core.FileInfo {
-	duplicates := make(map[string][]core.FileInfo)
-
-	var traverse func(file core.FileInfo)
-	traverse = func(file core.FileInfo) {
-		if len(file.Children) == 0 && file.Shasum != "" {
-			duplicates[file.Shasum] = append(duplicates[file.Shasum], file)
-		}
-		for _, child := range file.Children {
-			traverse(child)
-		}
-	}
-
-	traverse(root)
-
-	return duplicates
-}
-
-// getRelativePaths returns a list of relative paths for the given files
-func getRelativePaths(files []core.FileInfo) []string {
-	paths := make([]string, len(files))
-	for i, file := range files {
-		paths[i] = file.RelativePath
-	}
-	return paths
 }

@@ -1,6 +1,7 @@
 package android
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
 	"bitrise-plugins-analyze/appbundle/core/android"
 	"fmt"
 	"image/png"
@@ -10,7 +11,8 @@ import (
 	"strings"
 )
 
-func AnalyzeImages(bundleDir string, manifest android.AndroidManifest) error {
+func AnalyzeImages(bundleDir string, manifest android.AndroidManifest) ([]core.OversizedImage, error) {
+	oversizedImages := []core.OversizedImage{}
 	err := filepath.Walk(bundleDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -46,14 +48,24 @@ func AnalyzeImages(bundleDir string, manifest android.AndroidManifest) error {
 			}
 
 			if convertedSize < originalSize {
-				fmt.Printf("%s: saves %1.2f KB\n", path, float64(originalSize-convertedSize)/1024.0)
+				Relpath, err := filepath.Rel(bundleDir, path)
+				if err != nil {
+					return err
+				}
+
+				oversizedImages = append(oversizedImages, core.OversizedImage{
+					RelativePath: Relpath,
+					OriginalSize: originalSize,
+					Saving:       originalSize - convertedSize,
+					ConvertedTo:  "webp",
+				})
 			}
 		}
 
 		return nil
 	})
 
-	return err
+	return oversizedImages, err
 }
 
 func convertToWebP(imagePath string) (int64, int64, error) {

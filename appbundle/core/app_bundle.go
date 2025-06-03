@@ -19,4 +19,5 @@ type AppBundle struct {
 	MachOFiles         []any                `json:"mach_o_files,omitempty"`
 	DexPackages        []android.DexPackage `json:"dex_files,omitempty"`
 	AsrcFiles          []android.AsrcFile   `json:"arsc_files,omitempty"`
+	OversizedImages    []OversizedImage     `json:"oversized_images,omitempty"`
 }
