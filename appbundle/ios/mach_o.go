@@ -1,4 +1,4 @@
-package appbundle
+package ios
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"

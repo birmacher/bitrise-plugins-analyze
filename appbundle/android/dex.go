@@ -1,4 +1,4 @@
-package appbundle
+package android
 
 import (
 	"bitrise-plugins-analyze/appbundle/core/android"
@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func analyzeDexFiles(unzipedApkDir string) ([]android.DexPackage, error) {
+func AnalyzeDexFiles(unzipedApkDir string) ([]android.DexPackage, error) {
 	allPackages := []android.DexPackage{}
 
 	// Walk through the APK path directory

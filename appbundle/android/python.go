@@ -1,4 +1,4 @@
-package appbundle
+package android
 
 import (
 	_ "embed"
