@@ -7,13 +7,14 @@ import (
 	"sort"
 
 	"bitrise-plugins-analyze/appbundle/core"
+
 	"github.com/spf13/cobra"
 )
 
 type diffEntry struct {
-	Path    string
-	OldSize int64
-	NewSize int64
+	Path    string `json:"path"`
+	OldSize int64  `json:"old_size,omitempty"`
+	NewSize int64  `json:"new_size,omitempty"`
 }
 
 type diffResult struct {
