@@ -2,6 +2,18 @@ package core
 
 import "strings"
 
+const (
+	FileTypeDirectory    = "directory"
+	FileTypeBinary       = "binary"
+	FileTypeFont         = "font"
+	FileTypeLocalization = "localization"
+	FileTypeImage        = "image"
+	FileTypeVideo        = "video"
+	FileTypeAssetCatalog = "asset_catalog"
+	FileTypeCoreMLModel  = "coreml_model"
+	FileTypeDex          = "dex"
+)
+
 // FileTypeInfo holds display name and color for a file type
 // Color should be a hex color code used for visualization
 // Label is a human friendly label shown in the legend
@@ -14,23 +26,23 @@ type FileTypeInfo struct {
 
 // CoreFileTypes contains file types that are common for all platforms
 var CoreFileTypes = map[string]FileTypeInfo{
-	"directory":    {Label: "Directory", Color: "#b0b4ff"},
-	"binary":       {Label: "Binary", Color: "#a5d8ff"},
-	"font":         {Label: "Font", Color: "#ff9f0a"},
-	"localization": {Label: "Localization", Color: "#30d158"},
-	"image":        {Label: "Image", Color: "#64d2ff"},
-	"video":        {Label: "Video", Color: "#bf5af2"},
+	FileTypeDirectory:    {Label: "Directory", Color: "#b0b4ff"},
+	FileTypeBinary:       {Label: "Binary", Color: "#a5d8ff"},
+	FileTypeFont:         {Label: "Font", Color: "#ff9f0a"},
+	FileTypeLocalization: {Label: "Localization", Color: "#30d158"},
+	FileTypeImage:        {Label: "Image", Color: "#64d2ff"},
+	FileTypeVideo:        {Label: "Video", Color: "#bf5af2"},
 }
 
 // IOSFileTypes lists iOS specific file types
 var IOSFileTypes = map[string]FileTypeInfo{
-	"asset_catalog": {Label: "Asset Catalog", Color: "#ffe066"},
-	"coreml_model":  {Label: "CoreML Model", Color: "#ff453a"},
+	FileTypeAssetCatalog: {Label: "Asset Catalog", Color: "#ffe066"},
+	FileTypeCoreMLModel:  {Label: "CoreML Model", Color: "#ff453a"},
 }
 
 // AndroidFileTypes lists Android specific file types
 var AndroidFileTypes = map[string]FileTypeInfo{
-	"dex": {Label: "Dex", Color: "#8e8d8a"},
+	FileTypeDex: {Label: "Dex", Color: "#8e8d8a"},
 }
 
 // FileTypesForPlatforms returns a combined set of file types
