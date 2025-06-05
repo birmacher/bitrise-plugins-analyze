@@ -111,7 +111,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 
 		parent.Children = append(parent.Children, core.FileInfo{
 			RelativePath: filepath.Join(dexPackagePath, strings.ReplaceAll(dexPackage.GetPath(), "/", ".")),
-			Type:         "Dex",
+			Type:         "dex",
 			Size:         dexPackage.Size,
 			Children:     make([]core.FileInfo, 0),
 		})
@@ -122,7 +122,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 	if totalDexSize-dexPackageSizes > 0 {
 		dexFileInfo.Children = append(dexFileInfo.Children, core.FileInfo{
 			RelativePath: "dex/Unmapped dex",
-			Type:         "Dex",
+			Type:         "dex",
 			Size:         totalDexSize - dexPackageSizes,
 			Children:     make([]core.FileInfo, 0),
 		})

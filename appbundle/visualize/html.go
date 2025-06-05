@@ -32,6 +32,8 @@ type templateData struct {
 	Duplicates       []visualize.DuplicateGroup
 	OversizedImages  []core.OversizedImage
 	MissingResources []core.FileInfo
+	FileTypes        map[string]core.FileTypeInfo
+	FileTypeColors   template.JS
 }
 
 // formatSize converts bytes to a human-readable string
@@ -88,6 +90,16 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 
 	missingResources := FindMissingResources(*bundle)
 
+	fileTypes := core.FileTypesForPlatforms(bundle.SupportedPlatforms)
+	colorMap := map[string]string{}
+	for k, v := range fileTypes {
+		colorMap[k] = v.Color
+	}
+	colorMapJSON, err := json.Marshal(colorMap)
+	if err != nil {
+		return fmt.Errorf("failed to marshal type colors: %v", err)
+	}
+
 	// Create template data
 	data := templateData{
 		Title:            "App Bundle Analysis",
@@ -104,6 +116,8 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		Duplicates:       duplicates,
 		MissingResources: missingResources,
 		OversizedImages:  bundle.OversizedImages,
+		FileTypes:        fileTypes,
+		FileTypeColors:   template.JS(colorMapJSON),
 	}
 
 	// Create a buffer to store the rendered template

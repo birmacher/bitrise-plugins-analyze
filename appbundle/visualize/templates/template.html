@@ -379,42 +379,12 @@
 
   <div id="overview" class="tab-content active">
     <div class="legend">
+      {{range $key, $val := .FileTypes}}
       <div class="legend-item">
-        <div class="legend-color" style="background: #b0b4ff"></div>
-        <span class="legend-label">Directory</span>
+        <div class="legend-color" style="background: {{$val.Color}}"></div>
+        <span class="legend-label">{{$val.Label}}</span>
       </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #a5d8ff"></div>
-        <span class="legend-label">Binary</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #ffe066"></div>
-        <span class="legend-label">Asset Catalog</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #ff3b30"></div>
-        <span class="legend-label">Duplicate</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #ff9f0a"></div>
-        <span class="legend-label">Font</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #30d158"></div>
-        <span class="legend-label">Localization</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #64d2ff"></div>
-        <span class="legend-label">Image</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #bf5af2"></div>
-        <span class="legend-label">Video</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #ff453a"></div>
-        <span class="legend-label">CoreML Model</span>
-      </div>
+      {{end}}
     </div>
     <div id="chart"></div>
   </div>
@@ -630,18 +600,8 @@ function initChart() {
   }
 
   // Color mapping for different file types
-  const colorMap = {
-    directory: "#b0b4ff",
-    binary: "#a5d8ff",
-    asset_catalog: "#ffe066",
-    duplicate: "#ff3b30",
-    font: "#ff9f0a",
-    localization: "#30d158",
-    image: "#64d2ff",
-    video: "#bf5af2",
-    coreml_model: "#ff453a",
-    "": "#ddd"
-  };
+  const colorMap = {{.FileTypeColors}};
+  colorMap[""] = "#ddd";
   const markerColors = types.map(type => colorMap[type] || "#ddd");
 
   const data = [{
