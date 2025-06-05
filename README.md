@@ -12,7 +12,12 @@ bitrise plugin install https://github.com/birmacher/bitrise-plugins-analyze.git
 
 ## Usage
 
-Basic command structure:
+The plugin provides two main commands: `analyze` and `diff`.
+
+## Analyze Command
+
+Analyzes an app bundle and provides detailed insights about its size and content.
+
 ```bash
 bitrise :analyze [path] [flags]
 ```
@@ -57,13 +62,41 @@ bitrise :analyze MyApp.xcarchive --html --json --markdown
 bitrise :analyze MyApp.app --html --output-dir=/path/to/reports
 ```
 
-### Report Contents
+## Diff Command
 
-The analysis provides detailed information about:
-- Basic app information (bundle ID, version, size)
-- Top 10 largest modules
-- Top 10 largest files
-- Duplicate content (both in file system and asset catalogs)
+Compares two JSON analysis reports to identify file changes between app versions.
+
+```bash
+bitrise :diff [old.json] [new.json] [flags]
+```
+
+### Arguments
+
+- `old.json`: Path to the JSON report of the old app version
+- `new.json`: Path to the JSON report of the new app version
+
+### Flags
+
+- `--json`: Path to save the diff results as a JSON file
+
+### Output
+
+The diff command identifies and reports:
+- Added files (with sizes)
+- Removed files (with sizes)
+- Changed files (with size comparisons)
+
+### Examples
+
+1. Compare two JSON reports:
+```bash
+bitrise :diff old.json new.json
+```
+
+2. Save diff results to a JSON file:
+```bash
+bitrise :diff old.json new.json --json=diff.json
+```
 
 ## Requirements
 
