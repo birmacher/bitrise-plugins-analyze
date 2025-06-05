@@ -117,16 +117,50 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 	}
 	bundle.Files = files
 
-	// Analyze DEX files
-	dexPackages, err := android.AnalyzeDexFiles(unzipedApkDir)
+	pythonEnv := &android.PythonEnvironment{}
+	err = pythonEnv.SetupPythonEnvironment()
 	if err != nil {
-		return fmt.Errorf("failed to analyze DEX files: %v", err)
-	} else {
-		bundle.DexPackages = dexPackages
+		return err
+	}
+	defer pythonEnv.Cleanup()
+
+	// Walk through the files and analyze the content further
+	err = filepath.Walk(unzipedApkDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		switch filepath.Ext(strings.ToLower(path)) {
+		case ".dex":
+			dexFiles, err := pythonEnv.AnalyzeDex(path)
+			if err != nil {
+				return err
+			}
+
+			err = android.ParseDexOutput(dexFiles, bundle)
+			if err != nil {
+				return err
+			}
+		case ".so":
+			_, err := pythonEnv.AnalyzeLief(path)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to walk bundle directory: %v", err)
 	}
 
 	// Analyze arsc files
-	arscResources, err := android.AnalyzeArsc(bundlePath)
+	arscResources, err := pythonEnv.AnalyzeArsc(bundlePath)
 	if err != nil {
 		return fmt.Errorf("failed to analyze ARSC files: %v", err)
 	} else {

@@ -1,60 +1,28 @@
 package android
 
 import (
+	"bitrise-plugins-analyze/appbundle/core"
 	"bitrise-plugins-analyze/appbundle/core/android"
-	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 )
 
-func AnalyzeDexFiles(unzipedApkDir string) ([]android.DexPackage, error) {
-	allPackages := []android.DexPackage{}
+func ParseDexOutput(dexOutput map[string]int64, bundle *core.AppBundle) error {
+	// Go through the dex output and create DexPackage objects
+	for classes, size := range dexOutput {
+		packageName := strings.TrimPrefix(filepath.Dir(classes), "L")
+		className := strings.TrimSuffix(filepath.Base(classes), ";")
 
-	// Walk through the APK path directory
-	err := filepath.Walk(unzipedApkDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+		// Skip classnames that include "$" as they are inner classes
+		if strings.Contains(className, "$") {
+			continue
 		}
 
-		// Skip directories
-		if info.IsDir() {
-			return nil
-		}
-
-		// Find any *.dex file
-		if filepath.Ext(path) == ".dex" {
-			// check dex file with dex_py
-			dexFiles, err := AnalyzeDex(path)
-			if err != nil {
-				// Log the error but continue with other dex files
-				fmt.Printf("Failed to analyze DEX file %s: %v\n", path, err)
-				return nil
-			}
-
-			// Go through the analyzed dex files and create DexPackage objects
-			for classes, size := range dexFiles {
-				packageName := strings.TrimPrefix(filepath.Dir(classes), "L")
-				className := strings.TrimSuffix(filepath.Base(classes), ";")
-
-				// Skip classnames that include "$" as they are inner classes
-				if strings.Contains(className, "$") {
-					continue
-				}
-
-				// add class to the package
-				addClassToPackage(&allPackages, packageName, className, int64(size))
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("error walking through extracted APK directory: %v", err)
+		// add class to the package
+		addClassToPackage(&bundle.DexPackages, packageName, className, size)
 	}
 
-	return allPackages, nil
+	return nil
 }
 
 func addClassToPackage(dexPackages *[]android.DexPackage, packageName, className string, size int64) {
