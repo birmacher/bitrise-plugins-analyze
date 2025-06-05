@@ -100,6 +100,7 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 	bundle.AppName = manifest.Application.Label
 	bundle.BundleID = manifest.Package
 	bundle.Version = manifest.VersionName + " (" + manifest.VersionCode + ")"
+	bundle.SupportedPlatforms = []string{"Android"}
 
 	unzipedApkDir, err := core.Unzip(bundlePath)
 	defer func() {

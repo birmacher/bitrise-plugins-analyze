@@ -66,7 +66,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 	// add a new root level file for dex files
 	dexFileInfo := core.FileInfo{
 		RelativePath: "dex",
-		Type:         "directory",
+		Type:         core.FileTypeDirectory,
 		Size:         totalDexSize,
 		Children:     make([]core.FileInfo, 0),
 	}
@@ -101,7 +101,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 			if !exists {
 				parent.Children = append(parent.Children, core.FileInfo{
 					RelativePath: intermediatePath,
-					Type:         "directory",
+					Type:         core.FileTypeDirectory,
 					Size:         dexPackage.Size,
 					Children:     make([]core.FileInfo, 0),
 				})
@@ -111,7 +111,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 
 		parent.Children = append(parent.Children, core.FileInfo{
 			RelativePath: filepath.Join(dexPackagePath, strings.ReplaceAll(dexPackage.GetPath(), "/", ".")),
-			Type:         "Dex",
+			Type:         core.FileTypeDex,
 			Size:         dexPackage.Size,
 			Children:     make([]core.FileInfo, 0),
 		})
@@ -122,7 +122,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 	if totalDexSize-dexPackageSizes > 0 {
 		dexFileInfo.Children = append(dexFileInfo.Children, core.FileInfo{
 			RelativePath: "dex/Unmapped dex",
-			Type:         "Dex",
+			Type:         core.FileTypeDex,
 			Size:         totalDexSize - dexPackageSizes,
 			Children:     make([]core.FileInfo, 0),
 		})
@@ -140,7 +140,7 @@ func simplifyDirectory(children []core.FileInfo) []core.FileInfo {
 	}
 
 	for i, child := range children {
-		if child.Type == "directory" && len(child.Children) == 1 && child.Children[0].Type == "directory" {
+		if child.Type == core.FileTypeDirectory && len(child.Children) == 1 && child.Children[0].Type == core.FileTypeDirectory {
 			relativePath := strings.Join([]string{child.RelativePath, filepath.Base(child.Children[0].RelativePath)}, ".")
 			children[i] = child.Children[0]
 			children[i].RelativePath = relativePath

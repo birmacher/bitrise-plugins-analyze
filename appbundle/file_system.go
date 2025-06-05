@@ -71,7 +71,7 @@ func AnalyzeFile(filePath string, basePath string) (core.FileInfo, error) {
 
 func getFileType(info os.FileInfo) string {
 	if info.IsDir() {
-		return "directory"
+		return core.FileTypeDirectory
 	}
 
 	name := strings.ToLower(info.Name())
@@ -80,29 +80,29 @@ func getFileType(info os.FileInfo) string {
 	switch ext {
 	// Fonts
 	case ".otf", ".ttc", ".ttf", ".woff":
-		return "font"
+		return core.FileTypeFont
 
-	// Localizations
+		// Localizations
 	case ".strings", ".xcstrings", ".stringsdict":
-		return "localization"
+		return core.FileTypeLocalization
 
-	// Asset Catalogs
+		// Asset Catalogs
 	case ".car", ".xcassets":
-		return "asset_catalog"
+		return core.FileTypeAssetCatalog
 
 	case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif":
-		return "image"
+		return core.FileTypeImage
 
-	// Videos
+		// Videos
 	case ".mp4", ".mov", ".m4v":
-		return "video"
+		return core.FileTypeVideo
 
-	// CoreML Models
+		// CoreML Models
 	case ".mlmodel", ".mlmodelc":
-		return "coreml_model"
+		return core.FileTypeCoreMLModel
 
 	default:
-		return "binary"
+		return core.FileTypeBinary
 	}
 }
 
