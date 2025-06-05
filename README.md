@@ -57,6 +57,16 @@ bitrise :analyze MyApp.xcarchive --html --json --markdown
 bitrise :analyze MyApp.app --html --output-dir=/path/to/reports
 ```
 
+5. Compare two JSON reports:
+```bash
+bitrise :diff old.json new.json
+```
+
+6. Save diff results to a JSON file:
+```bash
+bitrise :diff old.json new.json --json=diff.json
+```
+
 ### Report Contents
 
 The analysis provides detailed information about:
