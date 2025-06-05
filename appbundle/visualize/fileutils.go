@@ -48,6 +48,32 @@ func CountFiles(root core.FileInfo) int {
 	return count
 }
 
+// MarkDuplicateFiles sets the Type of duplicate files to FileTypeDuplicate
+func MarkDuplicateFiles(root *core.FileInfo) {
+	fileMap := make(map[string][]*core.FileInfo)
+
+	var traverse func(file *core.FileInfo)
+	traverse = func(file *core.FileInfo) {
+		if len(file.Children) == 0 && file.Shasum != "" {
+			key := fmt.Sprintf("%d-%s", file.Size, file.Shasum)
+			fileMap[key] = append(fileMap[key], file)
+		}
+		for i := range file.Children {
+			traverse(&file.Children[i])
+		}
+	}
+
+	traverse(root)
+
+	for _, files := range fileMap {
+		if len(files) > 1 {
+			for _, f := range files[1:] {
+				f.Type = core.FileTypeDuplicate
+			}
+		}
+	}
+}
+
 // FindLargestModules returns a sorted list of largest modules (directories)
 func FindLargestModules(root core.FileInfo) []core.FileInfo {
 	modules := make([]core.FileInfo, 0)

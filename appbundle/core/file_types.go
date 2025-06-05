@@ -12,6 +12,7 @@ const (
 	FileTypeAssetCatalog = "asset_catalog"
 	FileTypeCoreMLModel  = "coreml_model"
 	FileTypeDex          = "dex"
+	FileTypeDuplicate    = "duplicate"
 )
 
 // FileTypeInfo holds display name and color for a file type
@@ -32,6 +33,7 @@ var CoreFileTypes = map[string]FileTypeInfo{
 	FileTypeLocalization: {Label: "Localization", Color: "#30d158"},
 	FileTypeImage:        {Label: "Image", Color: "#64d2ff"},
 	FileTypeVideo:        {Label: "Video", Color: "#bf5af2"},
+	FileTypeDuplicate:    {Label: "Duplicate", Color: "#ff3b30"},
 }
 
 // IOSFileTypes lists iOS specific file types
