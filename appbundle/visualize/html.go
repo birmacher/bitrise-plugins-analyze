@@ -66,8 +66,6 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		appName = appName[:len(appName)-4] // Remove .app extension
 	}
 
-	MarkDuplicateFiles(&bundle.Files)
-
 	fileTreeJSON, err := json.Marshal(GeneratePlotlyChart(bundle))
 	if err != nil {
 		return fmt.Errorf("failed to marshal file tree: %v", err)
