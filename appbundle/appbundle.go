@@ -8,6 +8,7 @@ import (
 	"bitrise-plugins-analyze/appbundle/python"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -75,12 +76,12 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 		return err
 	}
 
-	// pythonEnv := &python.PythonEnvironment{}
-	// err = pythonEnv.SetupPythonEnvironment()
-	// if err != nil {
-	// 	return err
-	// }
-	// defer pythonEnv.Cleanup()
+	pythonEnv := &python.PythonEnvironment{}
+	err = pythonEnv.SetupPythonEnvironment()
+	if err != nil {
+		return err
+	}
+	defer pythonEnv.Cleanup()
 
 	// Walk through the files and analyze the content further
 	err = filepath.Walk(bundlePath, func(path string, info os.FileInfo, err error) error {
@@ -100,32 +101,32 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 			}
 			bundle.CarFiles = append(bundle.CarFiles, *carInfo)
 		default:
-			// // Run file command to check if it's a Mach-O binary
-			// cmd := exec.Command("file", path)
-			// output, err := cmd.Output()
-			// if err != nil {
-			// 	return nil // Skip if file command fails
-			// }
+			// Run file command to check if it's a Mach-O binary
+			cmd := exec.Command("file", path)
+			output, err := cmd.Output()
+			if err != nil {
+				return nil // Skip if file command fails
+			}
 
-			// // Check if the file is a Mach-O binary
-			// if !strings.Contains(string(output), "Mach-O") {
-			// 	return nil
-			// }
+			// Check if the file is a Mach-O binary
+			if !strings.Contains(string(output), "Mach-O") {
+				return nil
+			}
 
-			// liefOutput, err := pythonEnv.AnalyzeLief(path)
-			// if err != nil {
-			// 	return err
-			// }
+			liefOutput, err := pythonEnv.AnalyzeLief(path)
+			if err != nil {
+				return err
+			}
 
-			// relPath, err := filepath.Rel(bundlePath, path)
-			// if err != nil {
-			// 	return err
-			// }
+			relPath, err := filepath.Rel(bundlePath, path)
+			if err != nil {
+				return err
+			}
 
-			// err = core.ParseLiefOutput(relPath, liefOutput, bundle)
-			// if err != nil {
-			// 	return err
-			// }
+			err = core.ParseLiefOutput(relPath, liefOutput, bundle)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
