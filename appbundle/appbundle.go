@@ -146,7 +146,12 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 				return err
 			}
 		case ".so":
-			_, err := pythonEnv.AnalyzeLief(path)
+			liefOutput, err := pythonEnv.AnalyzeLief(path)
+			if err != nil {
+				return err
+			}
+
+			err = android.ParseLiefOutput(liefOutput, bundle)
 			if err != nil {
 				return err
 			}

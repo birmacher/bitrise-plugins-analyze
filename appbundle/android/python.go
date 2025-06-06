@@ -133,7 +133,7 @@ func (env *PythonEnvironment) AnalyzeDex(dexPath string) (map[string]int64, erro
 	return result, nil
 }
 
-func (env *PythonEnvironment) AnalyzeLief(liefPath string) (map[string]int, error) {
+func (env *PythonEnvironment) AnalyzeLief(liefPath string) (map[string]map[string]int64, error) {
 	if !env.isSetup() {
 		return nil, fmt.Errorf("python environment not set up")
 	}
@@ -151,18 +151,21 @@ func (env *PythonEnvironment) AnalyzeLief(liefPath string) (map[string]int, erro
 		return nil, fmt.Errorf("python failed: %w\nOutput: %s", err, out)
 	}
 
-	result := map[string]int{}
+	result := map[string]map[string]int64{}
 	lines := strings.Split(string(out), "\n")
 	for _, line := range lines {
-		fmt.Println(line)
-		// parts := strings.Fields(line)
-		// if len(parts) != 2 {
-		// 	continue
-		// }
-		// name := parts[0]
-		// var size int
-		// fmt.Sscanf(parts[1], "%d", &size)
-		// result[name] = size
+		parts := strings.Fields(line)
+		if len(parts) < 3 {
+			continue
+		}
+		group := parts[0]
+		name := parts[1]
+		var size int64
+		fmt.Sscanf(parts[2], "%d", &size)
+		if _, ok := result[group]; !ok {
+			result[group] = map[string]int64{}
+		}
+		result[group][name] = size
 	}
 	return result, nil
 }

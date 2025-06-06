@@ -1,15 +1,32 @@
 import sys
 import lief
+from collections import defaultdict
 
 def print_elf_info(path):
     elf = lief.parse(path)
-    print(f"\n--- ELF file: {path} ---")
-    print("Sections:")
-    for sec in elf.sections:
-        print(sec.name, sec.type, sec.type.name if sec.type else "")
-    print("Segments:")
-    for seg in elf.segments:
-        print(seg.type.name if seg.type else "", seg.file_size)
+
+    section_map = {i: s for i, s in enumerate(elf.sections)}
+
+    # Dict: section name -> list of symbols
+    section_symbols = defaultdict(list)
+
+    for sym in elf.symbols:
+        # Section number/index for the symbol
+        idx = sym.shndx
+        # Only valid section indices (and non-empty symbol names)
+        if idx >= 0 and idx in section_map and sym.name:
+            section = section_map[idx]
+            section_symbols[section.name].append({
+                "name": sym.name,
+                "size": sym.size,
+                "type": sym.type.name if sym.type else "",
+                "binding": sym.binding.name if sym.binding else ""
+            })
+    
+    for section_name, symbols in section_symbols.items():
+        for sym in symbols:
+            if section_name != "" and sym['size'] > 0:
+                print(section_name, sym['name'], sym['size'], sym['type'], sym['binding'])
 
 def print_macho_info(path):
     macho = lief.parse(path)
