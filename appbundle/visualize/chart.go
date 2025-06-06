@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -50,6 +51,7 @@ func GeneratePlotlyChart(bundle *core.AppBundle) Chart {
 
 func ExpandAndroidFiles(bundle *core.AppBundle) {
 	ExpandDexFiles(bundle)
+	ExpandBinaryFiles(bundle)
 }
 
 func ExpandDexFiles(bundle *core.AppBundle) {
@@ -148,4 +150,58 @@ func simplifyDirectory(children []core.FileInfo) []core.FileInfo {
 	}
 
 	return children
+}
+
+func ExpandBinaryFiles(bundle *core.AppBundle) {
+	for _, file := range bundle.BinaryFiles {
+		var binaryFile *core.FileInfo
+
+		var traverseFiles func(files core.FileInfo)
+		traverseFiles = func(files core.FileInfo) {
+			if files.RelativePath == file.Path {
+				binaryFile = &files
+				return
+			}
+
+			for _, child := range files.Children {
+				traverseFiles(child)
+			}
+		}
+		traverseFiles(bundle.Files)
+
+		fmt.Println("Binary file found: " + file.Path)
+
+		var mappedSectionSizes int64
+		for _, section := range file.Sections {
+			mappedSectionSizes += section.Size
+
+			sectionFile := core.FileInfo{
+				RelativePath: filepath.Join(file.Path, section.Name),
+				Type:         core.FileTypeBinary,
+				Size:         section.Size,
+				Children:     make([]core.FileInfo, 0),
+			}
+
+			for _, symbol := range section.Symbols {
+				sectionFile.Children = append(sectionFile.Children, core.FileInfo{
+					RelativePath: filepath.Join(file.Path, section.Name, symbol.Name),
+					Type:         core.FileTypeBinary,
+					Size:         symbol.Size,
+					Children:     make([]core.FileInfo, 0),
+				})
+			}
+
+			binaryFile.Children = append(binaryFile.Children, sectionFile)
+		}
+
+		unmappedSize := binaryFile.Size - mappedSectionSizes
+		if unmappedSize > 0 {
+			binaryFile.Children = append(binaryFile.Children, core.FileInfo{
+				RelativePath: filepath.Join(file.Path, "Unmapped"),
+				Type:         core.FileTypeBinary,
+				Size:         unmappedSize,
+				Children:     make([]core.FileInfo, 0),
+			})
+		}
+	}
 }

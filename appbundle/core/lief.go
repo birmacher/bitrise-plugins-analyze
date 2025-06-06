@@ -10,3 +10,8 @@ type LiefSection struct {
 	Size    int64        `json:"size"`
 	Symbols []LiefSymbol `json:"symbols"`
 }
+
+type LiefBinary struct {
+	Path     string        `json:"path"`
+	Sections []LiefSection `json:"sections"`
+}

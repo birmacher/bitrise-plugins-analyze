@@ -151,7 +151,12 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 				return err
 			}
 
-			err = android.ParseLiefOutput(liefOutput, bundle)
+			relPath, err := filepath.Rel(unzipedApkDir, path)
+			if err != nil {
+				return err
+			}
+
+			err = android.ParseLiefOutput(relPath, liefOutput, bundle)
 			if err != nil {
 				return err
 			}

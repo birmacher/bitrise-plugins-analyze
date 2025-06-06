@@ -2,11 +2,13 @@ package android
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
-	"fmt"
 )
 
-func ParseLiefOutput(liefOutput map[string]map[string]int64, bundle *core.AppBundle) error {
-	sections := []core.LiefSection{}
+func ParseLiefOutput(filePath string, liefOutput map[string]map[string]int64, bundle *core.AppBundle) error {
+	binary := core.LiefBinary{
+		Path:     filePath,
+		Sections: []core.LiefSection{},
+	}
 
 	for section, symbols := range liefOutput {
 		section := core.LiefSection{
@@ -14,7 +16,7 @@ func ParseLiefOutput(liefOutput map[string]map[string]int64, bundle *core.AppBun
 			Size:    0,
 			Symbols: []core.LiefSymbol{},
 		}
-		fmt.Println("Processing section:", section)
+
 		for symbol, size := range symbols {
 			section.Size += size
 			section.Symbols = append(section.Symbols, core.LiefSymbol{
@@ -23,9 +25,9 @@ func ParseLiefOutput(liefOutput map[string]map[string]int64, bundle *core.AppBun
 			})
 		}
 
-		sections = append(sections, section)
+		binary.Sections = append(binary.Sections, section)
 	}
 
-	bundle.BinaryFiles = sections
+	bundle.BinaryFiles = append(bundle.BinaryFiles, binary)
 	return nil
 }
