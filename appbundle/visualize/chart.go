@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -196,5 +197,52 @@ func ExpandBinaryFiles(bundle *core.AppBundle) {
 }
 
 func ExpandCarFiles(bundle *core.AppBundle) {
-	// Todo
+	for _, car := range bundle.CarFiles {
+		var traverseFiles func(files *core.FileInfo)
+		traverseFiles = func(files *core.FileInfo) {
+			if files.RelativePath == car.Path {
+				var totalCarSize int64
+				for _, asset := range car.Assets {
+					var totalAssetSize int64
+
+					assetFile := core.FileInfo{
+						RelativePath: filepath.Join(car.Path, asset.Name),
+						Type:         core.FileTypeDirectory,
+						Size:         0,
+						Children:     make([]core.FileInfo, 0),
+					}
+					for _, rendition := range asset.RenditionInfo {
+						totalAssetSize += rendition.Size
+
+						assetFile.Children = append(assetFile.Children, core.FileInfo{
+							RelativePath: filepath.Join(car.Path, asset.Name, fmt.Sprintf("%s@%dx~%s", rendition.RenditionName, rendition.Scale, rendition.Idiom)),
+							Type:         core.FileTypeImage,
+							Size:         rendition.Size,
+							Children:     make([]core.FileInfo, 0),
+						})
+					}
+					assetFile.Size = totalAssetSize
+					totalCarSize += totalAssetSize
+
+					files.Children = append(files.Children, assetFile)
+				}
+
+				unmappedSize := files.Size - totalCarSize
+				if unmappedSize > 0 {
+					files.Children = append(files.Children, core.FileInfo{
+						RelativePath: filepath.Join(car.Path, "Unmapped"),
+						Type:         core.FileTypeBinary,
+						Size:         unmappedSize,
+						Children:     make([]core.FileInfo, 0),
+					})
+				}
+				return
+			}
+
+			for i := range files.Children {
+				traverseFiles(&files.Children[i])
+			}
+		}
+		traverseFiles(&bundle.Files)
+	}
 }
