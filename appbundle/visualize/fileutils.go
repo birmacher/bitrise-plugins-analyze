@@ -14,7 +14,7 @@ func FindLargestFiles(root core.FileInfo) []core.FileInfo {
 
 	var traverse func(file core.FileInfo)
 	traverse = func(file core.FileInfo) {
-		if len(file.Children) == 0 && file.Size > 0 {
+		if len(file.Children) == 0 && file.Size > 0 && file.Type != core.FileTypeUnmapped {
 			files = append(files, file)
 		}
 		for _, child := range file.Children {
@@ -56,7 +56,7 @@ func FindLargestModules(root core.FileInfo) []core.FileInfo {
 	for _, child := range root.Children {
 		var traverse func(file core.FileInfo)
 		traverse = func(file core.FileInfo) {
-			if len(file.Children) > 0 {
+			if len(file.Children) > 0 && file.Type != core.FileTypeUnmapped {
 				modules = append(modules, file)
 				for _, child := range file.Children {
 					traverse(child)
@@ -81,7 +81,7 @@ func CalculateTypeBreakdown(root core.FileInfo) []visualize.TypeBreakdown {
 
 	var traverse func(file core.FileInfo)
 	traverse = func(file core.FileInfo) {
-		if len(file.Children) == 0 {
+		if len(file.Children) == 0 && file.Type != core.FileTypeDirectory && file.Type != core.FileTypeUnmapped {
 			fileType := file.Type
 			if fileType == "" {
 				fileType = "unknown"

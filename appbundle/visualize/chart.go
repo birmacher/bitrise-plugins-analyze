@@ -119,8 +119,8 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 	// Add Unmapped dex file size if there are any
 	if totalDexSize-dexPackageSizes > 0 {
 		dexFileInfo.Children = append(dexFileInfo.Children, core.FileInfo{
-			RelativePath: "dex/Unmapped dex",
-			Type:         core.FileTypeDex,
+			RelativePath: "dex/Unmapped",
+			Type:         core.FileTypeUnmapped,
 			Size:         totalDexSize - dexPackageSizes,
 			Children:     make([]core.FileInfo, 0),
 		})
@@ -180,7 +180,7 @@ func ExpandBinaryFiles(bundle *core.AppBundle) {
 				if unmappedSize > 0 {
 					files.Children = append(files.Children, core.FileInfo{
 						RelativePath: filepath.Join(file.Path, "Unmapped"),
-						Type:         core.FileTypeBinary,
+						Type:         core.FileTypeUnmapped,
 						Size:         unmappedSize,
 						Children:     make([]core.FileInfo, 0),
 					})
@@ -231,7 +231,7 @@ func ExpandCarFiles(bundle *core.AppBundle) {
 				if unmappedSize > 0 {
 					files.Children = append(files.Children, core.FileInfo{
 						RelativePath: filepath.Join(car.Path, "Unmapped"),
-						Type:         core.FileTypeBinary,
+						Type:         core.FileTypeUnmapped,
 						Size:         unmappedSize,
 						Children:     make([]core.FileInfo, 0),
 					})
