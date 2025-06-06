@@ -12,7 +12,7 @@ import (
 //go:embed py/dex_size.py
 var dexScript []byte
 
-//go:embed py/lief.py
+//go:embed py/lief_parser.py
 var liefScript []byte
 
 //go:embed py/requirements.txt
@@ -139,7 +139,7 @@ func (env *PythonEnvironment) AnalyzeLief(liefPath string) (map[string]int, erro
 	}
 
 	// Write embedded Python script
-	pyFile := filepath.Join(env.DirPath, "lief.py")
+	pyFile := filepath.Join(env.DirPath, "lief_parser.py")
 	if err := os.WriteFile(pyFile, liefScript, 0644); err != nil {
 		return nil, fmt.Errorf("failed to write script: %w", err)
 	}

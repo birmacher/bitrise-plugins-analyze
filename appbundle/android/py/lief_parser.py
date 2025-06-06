@@ -6,10 +6,10 @@ def print_elf_info(path):
     print(f"\n--- ELF file: {path} ---")
     print("Sections:")
     for sec in elf.sections:
-        print(f"  {sec.name:15s} offset={sec.offset} size={sec.size} type={sec.type.name}")
+        print(sec.name, sec.type, sec.type.name if sec.type else "")
     print("Segments:")
     for seg in elf.segments:
-        print(f"  {seg.type.name:12s} file_offset={seg.file_offset} file_size={seg.file_size} virtual_addr={hex(seg.virtual_address)}")
+        print(seg.type.name if seg.type else "", seg.file_size)
 
 def print_macho_info(path):
     macho = lief.parse(path)
@@ -24,9 +24,9 @@ def print_macho_info(path):
 if __name__ == "__main__":
     for f in sys.argv[1:]:
         bin = lief.parse(f)
-        if bin.format == lief.EXE_FORMATS.ELF:
+        if bin.format.name == "ELF":
             print_elf_info(f)
-        elif bin.format == lief.EXE_FORMATS.MACHO:
+        elif bin.format.name == "MACHO":
             print_macho_info(f)
         else:
             print(f"{f}: Not a supported binary (ELF or Mach-O).")

@@ -1,2 +1,2 @@
 androguard~=4.1.0
-lief~=0.12.0
+lief~=0.16.0
