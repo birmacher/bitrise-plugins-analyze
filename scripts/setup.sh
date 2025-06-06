@@ -22,5 +22,6 @@ echo "Running application..."
 
 # bin/bitrise-plugins-analyze analyze ./scripts/lightyear.ipa --json --html --output-dir=./deploy
 # bin/bitrise-plugins-analyze analyze ./scripts/HexaCalc.ipa --markdown --json --html --output-dir=./deploy
-bin/bitrise-plugins-analyze analyze ./scripts/app-release-bitrise-signed.aab --markdown --json --html --output-dir=./deploy
+# bin/bitrise-plugins-analyze analyze ./scripts/app-release-bitrise-signed.aab --markdown --json --html --output-dir=./deploy
+bin/bitrise-plugins-analyze analyze ~/Downloads/duckduckgo-5.235.0-play-release.apk --markdown --json --html --output-dir=./deploy
 # cat ./deploy/*.json
