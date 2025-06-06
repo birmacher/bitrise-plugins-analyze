@@ -5,6 +5,7 @@ import (
 	"bitrise-plugins-analyze/appbundle/core"
 	androidcore "bitrise-plugins-analyze/appbundle/core/android"
 	"bitrise-plugins-analyze/appbundle/ios"
+	"bitrise-plugins-analyze/appbundle/python"
 	"fmt"
 	"os"
 	"os/exec"
@@ -75,7 +76,7 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 		return err
 	}
 
-	pythonEnv := &android.PythonEnvironment{}
+	pythonEnv := &python.PythonEnvironment{}
 	err = pythonEnv.SetupPythonEnvironment()
 	if err != nil {
 		return err
@@ -166,7 +167,7 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 	}
 	bundle.Files = files
 
-	pythonEnv := &android.PythonEnvironment{}
+	pythonEnv := &python.PythonEnvironment{}
 	err = pythonEnv.SetupPythonEnvironment()
 	if err != nil {
 		return err

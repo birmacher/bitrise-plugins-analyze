@@ -1,4 +1,4 @@
-package android
+package python
 
 import (
 	_ "embed"
