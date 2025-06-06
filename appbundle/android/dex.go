@@ -44,9 +44,8 @@ func addClassToPackage(dexPackages *[]android.DexPackage, packageName, className
 	}
 	// Add the class to the package via slice index
 	(*dexPackages)[pkgIdx].Classes = append((*dexPackages)[pkgIdx].Classes, android.DexClass{
-		Name:   className,
-		Size:   size,
-		Shasum: "", // SHA256 will be calculated later
+		Name: className,
+		Size: size,
 	})
 	(*dexPackages)[pkgIdx].Size += size
 }
