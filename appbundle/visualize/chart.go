@@ -16,7 +16,9 @@ type Chart struct {
 }
 
 func GeneratePlotlyChart(bundle *core.AppBundle) Chart {
-	ExpandAndroidFiles(bundle)
+	ExpandDexFiles(bundle)
+	ExpandBinaryFiles(bundle)
+	ExpandCarFiles(bundle)
 
 	chart := Chart{
 		Labels:  []string{},
@@ -30,11 +32,10 @@ func GeneratePlotlyChart(bundle *core.AppBundle) Chart {
 	traverseFiles = func(files core.FileInfo, parent string) {
 		if parent == "" {
 			chart.Labels = append(chart.Labels, bundle.AppName)
-			chart.Values = append(chart.Values, bundle.InstallSize)
 		} else {
 			chart.Labels = append(chart.Labels, filepath.Base(files.RelativePath))
-			chart.Values = append(chart.Values, files.Size)
 		}
+		chart.Values = append(chart.Values, files.Size)
 		chart.Parents = append(chart.Parents, parent)
 		chart.Types = append(chart.Types, files.Type)
 		chart.Ids = append(chart.Ids, files.RelativePath)
@@ -46,11 +47,6 @@ func GeneratePlotlyChart(bundle *core.AppBundle) Chart {
 	traverseFiles(bundle.Files, "")
 
 	return chart
-}
-
-func ExpandAndroidFiles(bundle *core.AppBundle) {
-	ExpandDexFiles(bundle)
-	ExpandBinaryFiles(bundle)
 }
 
 func ExpandDexFiles(bundle *core.AppBundle) {
@@ -197,4 +193,8 @@ func ExpandBinaryFiles(bundle *core.AppBundle) {
 		}
 		traverseFiles(&bundle.Files)
 	}
+}
+
+func ExpandCarFiles(bundle *core.AppBundle) {
+	// Todo
 }
