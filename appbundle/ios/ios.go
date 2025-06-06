@@ -14,18 +14,18 @@ func GetTempIPAPath(bundle_path string) (string, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var app_path string
-	var tempDir string
-	defer func() {
-		if tempDir != "" {
-			os.RemoveAll(tempDir)
-		}
-	}()
+	// var tempDir string
+	// defer func() {
+	// 	if tempDir != "" {
+	// 		os.RemoveAll(tempDir)
+	// 	}
+	// }()
 	var err error
 	switch ext {
 	case core.AppExtension:
 		app_path = bundle_path
 	case core.IpaExtension:
-		app_path, tempDir, err = analyzeIpa(bundle_path)
+		app_path, _, err = analyzeIpa(bundle_path)
 	case core.XcarchiveExtension:
 		app_path, err = analyzeXcarchive(bundle_path)
 	default:

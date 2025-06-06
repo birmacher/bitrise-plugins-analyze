@@ -167,14 +167,14 @@ func ExpandBinaryFiles(bundle *core.AppBundle) {
 						Children:     make([]core.FileInfo, 0),
 					}
 
-					for _, symbol := range section.Symbols {
-						sectionFile.Children = append(sectionFile.Children, core.FileInfo{
-							RelativePath: filepath.Join(file.Path, section.Name, symbol.Name),
-							Type:         core.FileTypeBinary,
-							Size:         symbol.Size,
-							Children:     make([]core.FileInfo, 0),
-						})
-					}
+					// for _, symbol := range section.Symbols {
+					// 	sectionFile.Children = append(sectionFile.Children, core.FileInfo{
+					// 		RelativePath: filepath.Join(file.Path, section.Name, symbol.Name),
+					// 		Type:         core.FileTypeBinary,
+					// 		Size:         symbol.Size,
+					// 		Children:     make([]core.FileInfo, 0),
+					// 	})
+					// }
 
 					files.Children = append(files.Children, sectionFile)
 				}

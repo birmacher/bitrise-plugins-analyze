@@ -7,6 +7,7 @@ import (
 	"bitrise-plugins-analyze/appbundle/ios"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -74,16 +75,64 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 		return err
 	}
 
-	// Analyze .car files if present
-	err = ios.FindAndAnalyzeCarFiles(bundlePath, bundle)
+	pythonEnv := &android.PythonEnvironment{}
+	err = pythonEnv.SetupPythonEnvironment()
 	if err != nil {
 		return err
 	}
+	defer pythonEnv.Cleanup()
 
-	// Analyze Mach-O binaries
-	err = ios.FindAndAnalyzeMachO(bundlePath, bundle)
+	// Walk through the files and analyze the content further
+	err = filepath.Walk(bundlePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		switch filepath.Ext(strings.ToLower(path)) {
+		case ".car":
+			carInfo, err := ios.ParseCARFile(path, bundlePath)
+			if err != nil {
+				return fmt.Errorf("failed to analyze %s: %v", path, err)
+			}
+			bundle.CarFiles = append(bundle.CarFiles, *carInfo)
+		default:
+			// Run file command to check if it's a Mach-O binary
+			cmd := exec.Command("file", path)
+			output, err := cmd.Output()
+			if err != nil {
+				return nil // Skip if file command fails
+			}
+
+			// Check if the file is a Mach-O binary
+			if !strings.Contains(string(output), "Mach-O") {
+				return nil
+			}
+
+			liefOutput, err := pythonEnv.AnalyzeLief(path)
+			if err != nil {
+				return err
+			}
+
+			relPath, err := filepath.Rel(bundlePath, path)
+			if err != nil {
+				return err
+			}
+
+			err = core.ParseLiefOutput(relPath, liefOutput, bundle)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to walk bundle directory: %v", err)
 	}
 
 	return nil
@@ -156,9 +205,23 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 				return err
 			}
 
-			err = android.ParseLiefOutput(relPath, liefOutput, bundle)
+			err = core.ParseLiefOutput(relPath, liefOutput, bundle)
 			if err != nil {
 				return err
+			}
+		case ".arsc":
+			// Analyze arsc files
+			arscResources, err := pythonEnv.AnalyzeArsc(path)
+			if err != nil {
+				return fmt.Errorf("failed to analyze ARSC files: %v", err)
+			} else {
+				for resourceId, res := range arscResources {
+					bundle.AsrcFiles = append(bundle.AsrcFiles, androidcore.AsrcFile{
+						ResourceId: resourceId,
+						Type:       res["type"],
+						Name:       res["name"],
+					})
+				}
 			}
 		}
 
@@ -167,20 +230,6 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to walk bundle directory: %v", err)
-	}
-
-	// Analyze arsc files
-	arscResources, err := pythonEnv.AnalyzeArsc(bundlePath)
-	if err != nil {
-		return fmt.Errorf("failed to analyze ARSC files: %v", err)
-	} else {
-		for resourceId, res := range arscResources {
-			bundle.AsrcFiles = append(bundle.AsrcFiles, androidcore.AsrcFile{
-				ResourceId: resourceId,
-				Type:       res["type"],
-				Name:       res["name"],
-			})
-		}
 	}
 
 	// Analyze images

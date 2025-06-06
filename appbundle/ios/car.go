@@ -1,11 +1,9 @@
 package ios
 
 import (
-	"bitrise-plugins-analyze/appbundle/core"
 	"bitrise-plugins-analyze/appbundle/core/ios"
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -106,29 +104,4 @@ func ParseCARFile(path string, basePath string) (*ios.CarFileInfo, error) {
 		Path:   relativePath,
 		Assets: assets,
 	}, nil
-}
-
-// FindAndAnalyzeCarFiles searches for and analyzes all .car files in the bundle
-func FindAndAnalyzeCarFiles(bundlePath string, bundle *core.AppBundle) error {
-	err := filepath.Walk(bundlePath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() && filepath.Ext(path) == ".car" {
-			carInfo, err := ParseCARFile(path, bundlePath)
-			if err != nil {
-				return fmt.Errorf("failed to analyze %s: %v", path, err)
-			}
-			bundle.CarFiles = append(bundle.CarFiles, *carInfo)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to walk bundle directory: %v", err)
-	}
-
-	return nil
 }

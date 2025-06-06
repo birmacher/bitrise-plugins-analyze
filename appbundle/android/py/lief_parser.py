@@ -20,24 +20,24 @@ def print_elf_info(path):
                 "name": sym.name,
                 "size": sym.size,
                 "type": sym.type.name if sym.type else "",
-                "binding": sym.binding.name if sym.binding else ""
             })
     
     for section_name, symbols in section_symbols.items():
         for sym in symbols:
             if section_name != "" and sym['size'] > 0:
-                print(section_name, sym['name'], sym['size'], sym['type'], sym['binding'])
+                print(section_name, sym['name'], sym['size'], sym['type'])
 
 def print_macho_info(path):
     macho = lief.parse(path)
-    print(f"\n--- Mach-O file: {path} ---")
-    print("Sections:")
-    for sec in macho.sections:
-        print(f"  {sec.name:20s} offset={sec.offset} size={sec.size} segment={sec.segment.name}")
-    print("Segments:")
-    for seg in macho.segments:
-        print(f"  {seg.name:20s} file_offset={seg.file_offset} file_size={seg.file_size} virtual_addr={hex(seg.virtual_address)}")
 
+    # Build section map (Mach-O: section_number starts at 1, not 0! Index 0 = NO_SECT)
+    section_map = {i + 1: s for i, s in enumerate(macho.sections)}  # Indexing from 1
+
+    section_symbols = defaultdict(list)
+
+    for section in macho.sections:
+        print(section.segment.name, section.name, section.size, section.type.name if section.type else "N/A")
+        
 if __name__ == "__main__":
     for f in sys.argv[1:]:
         bin = lief.parse(f)
