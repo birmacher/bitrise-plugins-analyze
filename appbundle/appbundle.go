@@ -18,6 +18,11 @@ func Analyze(bundle_path string) (*core.AppBundle, error) {
 
 	var err error
 	var tmp_path string
+	defer func() {
+		if tmp_path != "" {
+			os.RemoveAll(tmp_path)
+		}
+	}()
 
 	switch ext {
 	case core.AppExtension, core.IpaExtension, core.XcarchiveExtension:

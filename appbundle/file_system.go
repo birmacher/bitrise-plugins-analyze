@@ -82,22 +82,23 @@ func getFileType(info os.FileInfo) string {
 	case ".otf", ".ttc", ".ttf", ".woff":
 		return core.FileTypeFont
 
-		// Localizations
+	// Localizations
 	case ".strings", ".xcstrings", ".stringsdict":
 		return core.FileTypeLocalization
 
-		// Asset Catalogs
+	// Asset Catalogs
 	case ".car", ".xcassets":
 		return core.FileTypeAssetCatalog
 
+	// Images
 	case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif":
 		return core.FileTypeImage
 
-		// Videos
+	// Videos
 	case ".mp4", ".mov", ".m4v":
 		return core.FileTypeVideo
 
-		// CoreML Models
+	// CoreML Models
 	case ".mlmodel", ".mlmodelc":
 		return core.FileTypeCoreMLModel
 
