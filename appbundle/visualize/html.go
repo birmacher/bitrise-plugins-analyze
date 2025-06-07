@@ -23,8 +23,8 @@ type templateData struct {
 	BundleID         string
 	Platform         string
 	Version          string
-	DownloadSize     string
-	InstallSize      string
+	DownloadSize     int64
+	InstallSize      int64
 	ChartData        template.JS
 	LargestFiles     []core.FileInfo
 	LargestModules   []core.FileInfo
@@ -100,6 +100,9 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		return fmt.Errorf("failed to marshal file tree: %v", err)
 	}
 
+	// Calculate type breakdown
+	typeBreakdown := CalculateTypeBreakdown(bundle.Files)
+
 	// Create template data
 	data := templateData{
 		Title:            "App Bundle Analysis",
@@ -107,8 +110,8 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		BundleID:         bundle.BundleID,
 		Platform:         strings.Join(bundle.SupportedPlatforms, ", "),
 		Version:          bundle.Version,
-		DownloadSize:     formatSize(bundle.DownloadSize),
-		InstallSize:      formatSize(bundle.InstallSize),
+		DownloadSize:     bundle.DownloadSize,
+		InstallSize:      bundle.InstallSize,
 		ChartData:        template.JS(fileTreeJSON),
 		LargestFiles:     largestFiles,
 		LargestModules:   largestModules,

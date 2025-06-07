@@ -363,11 +363,11 @@
     </div>
     <div class="info-item">
       <span class="info-label">Download Size</span>
-      <span class="info-value size-info" id="downloadSize">{{.DownloadSize}}</span>
+      <span class="info-value size-info" id="downloadSize">{{formatSize .DownloadSize}}</span>
     </div>
     <div class="info-item">
       <span class="info-label">Install Size</span>
-      <span class="info-value size-info" id="installSize">{{.InstallSize}}</span>
+      <span class="info-value size-info" id="installSize">{{formatSize .InstallSize}}</span>
     </div>
   </div>
   
@@ -576,7 +576,7 @@ function updateLargestModules() {
     li.innerHTML = `
       <div class="item-info">
         <div class="item-name">${moduleName}</div>
-        <div class="item-path">${modulePath} • ${fileCount} files</div>
+        <div class="item-path">${modulePath} • ${fileCount} ${fileCount === 1 ? 'file' : 'files'}</div>
       </div>
       <div class="item-size">
         <span class="size-number">${formatSize(module.size)}</span>
