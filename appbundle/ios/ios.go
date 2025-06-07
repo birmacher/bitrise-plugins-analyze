@@ -97,10 +97,21 @@ func CalculateDownloadSize(bundlePath string) (int64, error) {
 }
 
 func CalculateInstallSize(bundlePath string) (int64, error) {
-	cmd := exec.Command("sh", "-c", "du -sk "+bundlePath+" | awk '{print $1 * 1024}'")
+	cmd := exec.Command("du", "-sk", bundlePath)
 	output, err := cmd.Output()
 	if err != nil {
 		return 0, err
 	}
-	return strconv.ParseInt(strings.TrimSpace(string(output)), 10, 64)
+
+	fields := strings.Fields(string(output))
+	if len(fields) == 0 {
+		return 0, fmt.Errorf("failed to parse du output")
+	}
+
+	sizeKB, err := strconv.ParseInt(fields[0], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return sizeKB * 1024, nil
 }
