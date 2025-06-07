@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -33,6 +34,9 @@ func AnalyzeFile(filePath string, basePath string) (core.FileInfo, error) {
 		if err != nil {
 			return core.FileInfo{}, fmt.Errorf("failed to read directory: %v", err)
 		}
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Name() < entries[j].Name()
+		})
 
 		var totalSize int64
 		var childChecksums []string
