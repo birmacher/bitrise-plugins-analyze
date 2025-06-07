@@ -8,11 +8,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
 func AnalyzeImages(bundleDir string, manifest android.AndroidManifest) ([]core.OversizedImage, error) {
 	oversizedImages := []core.OversizedImage{}
+
 	err := filepath.Walk(bundleDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -63,6 +65,10 @@ func AnalyzeImages(bundleDir string, manifest android.AndroidManifest) ([]core.O
 		}
 
 		return nil
+	})
+
+	sort.Slice(oversizedImages, func(i, j int) bool {
+		return oversizedImages[i].Saving > oversizedImages[j].Saving
 	})
 
 	return oversizedImages, err
