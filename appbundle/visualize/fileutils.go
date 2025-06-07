@@ -81,10 +81,10 @@ func CalculateTypeBreakdown(root core.FileInfo) []visualize.TypeBreakdown {
 
 	var traverse func(file core.FileInfo)
 	traverse = func(file core.FileInfo) {
-		if len(file.Children) == 0 && file.Type != core.FileTypeDirectory && file.Type != core.FileTypeUnmapped {
+		if len(file.Children) == 0 && file.Type != core.FileTypeDirectory {
 			fileType := file.Type
 			if fileType == "" {
-				fileType = "unknown"
+				fileType = "Other"
 			}
 			breakdown[fileType] += file.Size
 		}

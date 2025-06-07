@@ -77,9 +77,6 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		largestModules = largestModules[:10]
 	}
 
-	// Calculate type breakdown
-	typeBreakdown := CalculateTypeBreakdown(bundle.Files)
-
 	// Find duplicate files
 	duplicates := FindDuplicates(bundle.Files)
 
