@@ -3,6 +3,7 @@ package android
 import (
 	"bitrise-plugins-analyze/appbundle/core"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,7 +13,36 @@ func GetTempAPKPath(bundle_path string) (string, error) {
 	ext := filepath.Ext(bundle_path)
 
 	if ext == core.ApkExtension {
-		return bundle_path, nil
+		tempDir, err := os.MkdirTemp("", "*")
+		if err != nil {
+			return "", fmt.Errorf("failed to create temp dir: %v", err)
+		}
+
+		// Copy APK to temp directory
+		destPath := filepath.Join(tempDir, filepath.Base(bundle_path))
+
+		sourceFile, err := os.Open(bundle_path)
+		if err != nil {
+			return "", fmt.Errorf("failed to open source file: %v", err)
+		}
+		defer sourceFile.Close()
+
+		destFile, err := os.Create(destPath)
+		if err != nil {
+			return "", fmt.Errorf("failed to create dest file: %v", err)
+		}
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, sourceFile)
+		if err != nil {
+			return "", fmt.Errorf("failed to copy file: %v", err)
+		}
+
+		err = destFile.Sync()
+		if err != nil {
+			return "", fmt.Errorf("failed to sync dest file: %v", err)
+		}
+		return destPath, nil
 	} else if ext == core.AabExtension {
 		bundle_path, err := analyzeAab(bundle_path)
 
@@ -31,7 +61,6 @@ func analyzeAab(aabPath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
 
 	// Create a debug keystore if it doesn't exist
 	keystorePath := filepath.Join(tempDir, "debug.keystore")

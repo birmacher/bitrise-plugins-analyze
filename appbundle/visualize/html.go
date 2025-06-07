@@ -18,22 +18,24 @@ var tmplFS embed.FS
 
 // templateData represents the data structure for the HTML template
 type templateData struct {
-	Title            string
-	AppName          string
-	BundleID         string
-	Platform         string
-	Version          string
-	DownloadSize     int64
-	InstallSize      int64
-	ChartData        template.JS
-	LargestFiles     []core.FileInfo
-	LargestModules   []core.FileInfo
-	TypeBreakdown    []visualize.TypeBreakdown
-	Duplicates       []visualize.DuplicateGroup
-	OversizedImages  []core.OversizedImage
-	MissingResources []core.FileInfo
-	FileTypes        map[string]core.FileTypeInfo
-	FileTypeColors   template.JS
+	Title                      string
+	AppName                    string
+	BundleID                   string
+	Platform                   string
+	Version                    string
+	DownloadSize               int64
+	InstallSize                int64
+	ChartData                  template.JS
+	LargestFiles               []core.FileInfo
+	LargestModules             []core.FileInfo
+	TypeBreakdown              []visualize.TypeBreakdown
+	Duplicates                 []visualize.DuplicateGroup
+	DuplicatesWastedSpace      int64
+	OversizedImages            []core.OversizedImage
+	OversizedImagesWastedSpace int64
+	MissingResources           []core.FileInfo
+	FileTypes                  map[string]core.FileTypeInfo
+	FileTypeColors             template.JS
 }
 
 // formatSize converts bytes to a human-readable string
@@ -79,6 +81,15 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 
 	// Find duplicate files
 	duplicates := FindDuplicates(bundle.Files)
+	duplicatesWastedSpace := int64(0)
+	for _, dup := range duplicates {
+		duplicatesWastedSpace += dup.WastedSpace
+	}
+
+	oversizedImagesWastedSpace := int64(0)
+	for _, img := range bundle.OversizedImages {
+		oversizedImagesWastedSpace += img.Saving
+	}
 
 	missingResources := FindMissingResources(*bundle)
 
@@ -105,22 +116,24 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 
 	// Create template data
 	data := templateData{
-		Title:            "App Bundle Analysis",
-		AppName:          appName,
-		BundleID:         bundle.BundleID,
-		Platform:         strings.Join(bundle.SupportedPlatforms, ", "),
-		Version:          bundle.Version,
-		DownloadSize:     bundle.DownloadSize,
-		InstallSize:      bundle.InstallSize,
-		ChartData:        template.JS(fileTreeJSON),
-		LargestFiles:     largestFiles,
-		LargestModules:   largestModules,
-		TypeBreakdown:    typeBreakdown,
-		Duplicates:       duplicates,
-		MissingResources: missingResources,
-		OversizedImages:  bundle.OversizedImages,
-		FileTypes:        fileTypes,
-		FileTypeColors:   template.JS(colorMapJSON),
+		Title:                      "App Bundle Analysis",
+		AppName:                    appName,
+		BundleID:                   bundle.BundleID,
+		Platform:                   strings.Join(bundle.SupportedPlatforms, ", "),
+		Version:                    bundle.Version,
+		DownloadSize:               bundle.DownloadSize,
+		InstallSize:                bundle.InstallSize,
+		ChartData:                  template.JS(fileTreeJSON),
+		LargestFiles:               largestFiles,
+		LargestModules:             largestModules,
+		TypeBreakdown:              typeBreakdown,
+		Duplicates:                 duplicates,
+		DuplicatesWastedSpace:      duplicatesWastedSpace,
+		MissingResources:           missingResources,
+		OversizedImages:            bundle.OversizedImages,
+		OversizedImagesWastedSpace: oversizedImagesWastedSpace,
+		FileTypes:                  fileTypes,
+		FileTypeColors:             template.JS(colorMapJSON),
 	}
 
 	// Create a buffer to store the rendered template

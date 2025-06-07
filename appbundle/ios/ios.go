@@ -70,7 +70,7 @@ func findAppPath(directory string) (string, error) {
 }
 
 func CalculateDownloadSize(bundlePath string) (int64, error) {
-	tempDir, err := os.MkdirTemp("", "app-*")
+	tempDir, err := os.MkdirTemp("", "*")
 	if err != nil {
 		return 0, err
 	}
