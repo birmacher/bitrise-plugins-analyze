@@ -69,11 +69,15 @@ func AnalyzeImages(bundleDir string, manifest android.AndroidManifest) ([]core.O
 }
 
 func convertToWebP(imagePath string) (int64, int64, error) {
+	if _, err := exec.LookPath("cwebp"); err != nil {
+		return 0, 0, fmt.Errorf("cwebp not found: please install it to analyze images")
+	}
+
 	tmpDir, err := os.MkdirTemp("", "webp-conversion")
-	defer (func() { os.RemoveAll(tmpDir) })()
 	if err != nil {
 		return 0, 0, err
 	}
+	defer (func() { os.RemoveAll(tmpDir) })()
 
 	tmpFile := filepath.Join(tmpDir, "converted.webp")
 
