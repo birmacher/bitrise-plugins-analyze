@@ -17,9 +17,11 @@ type Chart struct {
 }
 
 func GeneratePlotlyChart(bundle *core.AppBundle) Chart {
-	ExpandDexFiles(bundle)
-	ExpandBinaryFiles(bundle)
-	ExpandCarFiles(bundle)
+	bundleCopy := *bundle
+
+	ExpandDexFiles(&bundleCopy)
+	ExpandBinaryFiles(&bundleCopy)
+	ExpandCarFiles(&bundleCopy)
 
 	chart := Chart{
 		Labels:  []string{},

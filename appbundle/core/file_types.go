@@ -36,7 +36,7 @@ var CoreFileTypes = map[string]FileTypeInfo{
 	FileTypeImage:        {Label: "Image", Color: "#64d2ff"},
 	FileTypeVideo:        {Label: "Video", Color: "#bf5af2"},
 	FileTypeDuplicate:    {Label: "Duplicate", Color: "#ff3b30"},
-	FileTypeUnmapped:     {Label: "Unmapped", Color: "#gggggg"},
+	FileTypeUnmapped:     {Label: "Unmapped", Color: "#cccccc"},
 }
 
 // IOSFileTypes lists iOS specific file types
