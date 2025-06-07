@@ -2,6 +2,7 @@ package visualize
 
 import (
 	"bitrise-plugins-analyze/appbundle/core"
+	"bitrise-plugins-analyze/appbundle/core/visualize"
 	"fmt"
 	"path/filepath"
 	"slices"
@@ -246,5 +247,22 @@ func ExpandCarFiles(bundle *core.AppBundle) {
 			}
 		}
 		traverseFiles(&bundle.Files)
+	}
+}
+
+func FlagDuplicatesInChart(chart *Chart, duplicates []visualize.DuplicateGroup) {
+	// Create a map for quick lookup of duplicate file paths
+	duplicatePaths := []string{}
+	for _, group := range duplicates {
+		for _, file := range group.Files {
+			duplicatePaths = append(duplicatePaths, file.RelativePath)
+		}
+	}
+
+	// Flag duplicates in the chart
+	for i, id := range chart.Ids {
+		if slices.Contains(duplicatePaths, id) {
+			chart.Types[i] = core.FileTypeDuplicate
+		}
 	}
 }

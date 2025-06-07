@@ -66,11 +66,6 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 		appName = appName[:len(appName)-4] // Remove .app extension
 	}
 
-	fileTreeJSON, err := json.Marshal(GeneratePlotlyChart(bundle))
-	if err != nil {
-		return fmt.Errorf("failed to marshal file tree: %v", err)
-	}
-
 	// Pre-calculate largest files and modules
 	largestFiles := FindLargestFiles(bundle.Files)
 	if len(largestFiles) > 10 {
@@ -98,6 +93,14 @@ func GenerateHTML(bundle *core.AppBundle, outputDir string) error {
 	colorMapJSON, err := json.Marshal(colorMap)
 	if err != nil {
 		return fmt.Errorf("failed to marshal type colors: %v", err)
+	}
+
+	chart := GeneratePlotlyChart(bundle)
+	FlagDuplicatesInChart(&chart, duplicates)
+
+	fileTreeJSON, err := json.Marshal(chart)
+	if err != nil {
+		return fmt.Errorf("failed to marshal file tree: %v", err)
 	}
 
 	// Create template data
