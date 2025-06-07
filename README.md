@@ -103,3 +103,4 @@ bitrise :diff old.json new.json --json=diff.json
 - macOS (required for iOS app bundle analysis)
 - Bitrise CLI installed
 - For analyzing .ipa files: ability to extract and process iOS app bundles
+- For analyzing Android images: the `cwebp` command must be installed
