@@ -3,15 +3,20 @@ package core
 import "strings"
 
 const (
-	FileTypeDirectory    = "directory"
-	FileTypeBinary       = "binary"
-	FileTypeFont         = "font"
-	FileTypeLocalization = "localization"
-	FileTypeImage        = "image"
-	FileTypeVideo        = "video"
-	FileTypeAssetCatalog = "asset_catalog"
-	FileTypeCoreMLModel  = "coreml_model"
-	FileTypeDex          = "dex"
+	FileTypeDirectory     = "directory"
+	FileTypeBinary        = "binary"
+	FileTypeFont          = "font"
+	FileTypeLocalization  = "localization"
+	FileTypeImage         = "image"
+	FileTypeVideo         = "video"
+	FileTypeAudio         = "audio"
+	FileTypeAssetCatalog  = "asset_catalog"
+	FileTypeCoreMLModel   = "coreml_model"
+	FileTypeDex           = "dex"
+	FileTypeMetadata      = "metadata"
+	FileTypeAsset         = "asset"
+	FileTypeResource      = "resource"
+	FileTypeNativeLibrary = "native_library"
 	// Inner Types
 	FileTypeDuplicate = "duplicate"
 	FileTypeUnmapped  = "unmapped"
@@ -29,25 +34,30 @@ type FileTypeInfo struct {
 
 // CoreFileTypes contains file types that are common for all platforms
 var CoreFileTypes = map[string]FileTypeInfo{
-	FileTypeDirectory:    {Label: "Directory", Color: "#b0b4ff"},
-	FileTypeBinary:       {Label: "Binary", Color: "#a5d8ff"},
-	FileTypeFont:         {Label: "Font", Color: "#ff9f0a"},
-	FileTypeLocalization: {Label: "Localization", Color: "#30d158"},
-	FileTypeImage:        {Label: "Image", Color: "#64d2ff"},
-	FileTypeVideo:        {Label: "Video", Color: "#bf5af2"},
-	FileTypeDuplicate:    {Label: "Duplicate", Color: "#ff3b30"},
-	FileTypeUnmapped:     {Label: "Unmapped", Color: "#cccccc"},
+	FileTypeDirectory:    {Label: "Directory", Color: "#bdbdbd"},    // Gray
+	FileTypeBinary:       {Label: "Binary", Color: "#1976d2"},       // Blue
+	FileTypeFont:         {Label: "Font", Color: "#8d6e63"},         // Brown
+	FileTypeLocalization: {Label: "Localization", Color: "#388e3c"}, // Green
+	FileTypeImage:        {Label: "Image", Color: "#fbc02d"},        // Yellow
+	FileTypeVideo:        {Label: "Video", Color: "#d32f2f"},        // Red
+	FileTypeAudio:        {Label: "Audio", Color: "#7b1fa2"},        // Purple
+	FileTypeDuplicate:    {Label: "Duplicate", Color: "#c62828"},    // Dark Red
+	FileTypeUnmapped:     {Label: "Unmapped", Color: "#bdbdbd"},     // Light Gray
 }
 
 // IOSFileTypes lists iOS specific file types
 var IOSFileTypes = map[string]FileTypeInfo{
-	FileTypeAssetCatalog: {Label: "Asset Catalog", Color: "#ffe066"},
-	FileTypeCoreMLModel:  {Label: "CoreML Model", Color: "#ff453a"},
+	FileTypeAssetCatalog: {Label: "Asset Catalog", Color: "#ffa000"}, // Amber
+	FileTypeCoreMLModel:  {Label: "CoreML Model", Color: "#0288d1"},  // Light Blue
 }
 
 // AndroidFileTypes lists Android specific file types
 var AndroidFileTypes = map[string]FileTypeInfo{
-	FileTypeDex: {Label: "Dex", Color: "#8e8d8a"},
+	FileTypeDex:           {Label: "Dex", Color: "#4e747b"},            // Green
+	FileTypeMetadata:      {Label: "Metadata", Color: "#455a64"},       // Blue Gray
+	FileTypeAsset:         {Label: "Asset", Color: "#fbc02d"},          // Yellow
+	FileTypeResource:      {Label: "Resource", Color: "#0288d1"},       // Light Blue
+	FileTypeNativeLibrary: {Label: "Native Library", Color: "#6d4c41"}, // Dark Brown
 }
 
 // FileTypesForPlatforms returns a combined set of file types

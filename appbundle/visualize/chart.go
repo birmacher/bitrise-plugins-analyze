@@ -67,7 +67,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 	// add a new root level file for dex files
 	dexFileInfo := core.FileInfo{
 		RelativePath: "dex",
-		Type:         core.FileTypeDirectory,
+		Type:         core.FileTypeDex,
 		Size:         totalDexSize,
 		Children:     make([]core.FileInfo, 0),
 	}
@@ -102,7 +102,7 @@ func ExpandDexFiles(bundle *core.AppBundle) {
 			if !exists {
 				parent.Children = append(parent.Children, core.FileInfo{
 					RelativePath: intermediatePath,
-					Type:         core.FileTypeDirectory,
+					Type:         core.FileTypeDex,
 					Size:         dexPackage.Size,
 					Children:     make([]core.FileInfo, 0),
 				})

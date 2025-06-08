@@ -25,7 +25,7 @@ func AnalyzeFile(filePath string, basePath string) (core.FileInfo, error) {
 
 	fileInfo := core.FileInfo{
 		RelativePath: relativePath,
-		Type:         getFileType(info),
+		Type:         getFileType(relativePath, info),
 	}
 
 	// Recursively process directory contents
@@ -73,13 +73,34 @@ func AnalyzeFile(filePath string, basePath string) (core.FileInfo, error) {
 	return fileInfo, nil
 }
 
-func getFileType(info os.FileInfo) string {
+func getFileType(relativePath string, info os.FileInfo) string {
+	name := strings.ToLower(info.Name())
+	ext := strings.ToLower(filepath.Ext(name))
+
 	if info.IsDir() {
+		if relativePath == "META-INF" || strings.HasPrefix(relativePath, "META-INF/") {
+			return core.FileTypeMetadata
+		}
+
+		if relativePath == "assets" || strings.HasPrefix(relativePath, "assets/") {
+			return core.FileTypeAsset
+		}
+
+		if relativePath == "res" || strings.HasPrefix(relativePath, "res/") {
+			return core.FileTypeResource
+		}
+
+		if relativePath == "lib" || strings.HasPrefix(relativePath, "lib/") {
+			return core.FileTypeNativeLibrary
+		}
+
 		return core.FileTypeDirectory
 	}
 
-	name := strings.ToLower(info.Name())
-	ext := strings.ToLower(filepath.Ext(name))
+	if strings.Contains(relativePath, "AndroidManifest.xml") ||
+		strings.Contains(relativePath, "package.xml") {
+		return core.FileTypeMetadata
+	}
 
 	switch ext {
 	// Fonts
@@ -102,9 +123,16 @@ func getFileType(info os.FileInfo) string {
 	case ".mp4", ".mov", ".m4v":
 		return core.FileTypeVideo
 
+	// Audio
+	case ".mp3", ".wav", ".aac", ".m4a", ".flac":
+		return core.FileTypeAudio
+
 	// CoreML Models
 	case ".mlmodel", ".mlmodelc":
 		return core.FileTypeCoreMLModel
+
+	case ".json", ".plist", ".xml":
+		return core.FileTypeResource
 
 	default:
 		return core.FileTypeBinary
