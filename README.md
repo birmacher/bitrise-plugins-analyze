@@ -104,3 +104,8 @@ bitrise :diff old.json new.json --json=diff.json
 - Bitrise CLI installed
 - For analyzing .ipa files: ability to extract and process iOS app bundles
 - For analyzing Android images: the `cwebp` command must be installed
+
+### Environment Variables
+
+- `PYTHON_BIN`: Path to the Python interpreter used to create the temporary
+  virtual environment. Defaults to `python3`.
