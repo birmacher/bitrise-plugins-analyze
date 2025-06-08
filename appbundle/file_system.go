@@ -77,21 +77,27 @@ func getFileType(relativePath string, info os.FileInfo) string {
 	name := strings.ToLower(info.Name())
 	ext := strings.ToLower(filepath.Ext(name))
 
+	directory_type := ""
+
+	if relativePath == "META-INF" || strings.HasPrefix(relativePath, "META-INF/") {
+		directory_type = core.FileTypeMetadata
+	}
+
+	if relativePath == "assets" || strings.HasPrefix(relativePath, "assets/") {
+		directory_type = core.FileTypeAsset
+	}
+
+	if relativePath == "res" || strings.HasPrefix(relativePath, "res/") {
+		directory_type = core.FileTypeResource
+	}
+
+	if relativePath == "lib" || strings.HasPrefix(relativePath, "lib/") {
+		directory_type = core.FileTypeNativeLibrary
+	}
+
 	if info.IsDir() {
-		if relativePath == "META-INF" || strings.HasPrefix(relativePath, "META-INF/") {
-			return core.FileTypeMetadata
-		}
-
-		if relativePath == "assets" || strings.HasPrefix(relativePath, "assets/") {
-			return core.FileTypeAsset
-		}
-
-		if relativePath == "res" || strings.HasPrefix(relativePath, "res/") {
-			return core.FileTypeResource
-		}
-
-		if relativePath == "lib" || strings.HasPrefix(relativePath, "lib/") {
-			return core.FileTypeNativeLibrary
+		if directory_type != "" {
+			return directory_type
 		}
 
 		return core.FileTypeDirectory
@@ -134,7 +140,14 @@ func getFileType(relativePath string, info os.FileInfo) string {
 	case ".json", ".plist", ".xml":
 		return core.FileTypeResource
 
+	// Native Libraries
+	case ".so", ".dll", ".dylib":
+		return core.FileTypeNativeLibrary
+
 	default:
+		if directory_type != "" {
+			return directory_type
+		}
 		return core.FileTypeBinary
 	}
 }
