@@ -104,3 +104,7 @@ bitrise :diff old.json new.json --json=diff.json
 - Bitrise CLI installed
 - For analyzing .ipa files: ability to extract and process iOS app bundles
 - For analyzing Android images: the `cwebp` command must be installed
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
