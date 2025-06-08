@@ -38,6 +38,16 @@ func (env *PythonEnvironment) isSetup() bool {
 	return env.DirPath != ""
 }
 
+// pythonInterpreter returns the Python binary to use when creating the
+// virtual environment. It reads the path from the PYTHON_BIN environment
+// variable and falls back to "python3" if not set.
+func pythonInterpreter() string {
+	if bin := os.Getenv("PYTHON_BIN"); bin != "" {
+		return bin
+	}
+	return "python3"
+}
+
 // Cleanup removes the temporary virtual environment directory
 func (env *PythonEnvironment) Cleanup() {
 	if env.DirPath != "" {
@@ -69,7 +79,7 @@ func (env *PythonEnvironment) SetupPythonEnvironment() error {
 	// Create venv if it doesn't exist
 	if _, err := os.Stat(env.PythonBin()); os.IsNotExist(err) {
 		fmt.Println("  Creating virtual environment...")
-		cmd := exec.Command("python3.11", "-m", "venv", env.VenvDir())
+		cmd := exec.Command(pythonInterpreter(), "-m", "venv", env.VenvDir())
 		if out, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("venv creation failed: %w\nOutput: %s", err, out)
 		}
