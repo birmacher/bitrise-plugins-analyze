@@ -109,3 +109,7 @@ bitrise :diff old.json new.json --json=diff.json
 
 - `PYTHON_BIN`: Path to the Python interpreter used to create the temporary
   virtual environment. Defaults to `python3`.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

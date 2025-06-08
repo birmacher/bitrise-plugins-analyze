@@ -13,12 +13,37 @@ import (
 func ParseAndroidManifest(apkPath string) (android.AndroidManifest, error) {
 	var manifest android.AndroidManifest
 
-	// Path to the apkanalyzer tool
-	apkanalyzerPath := filepath.Join(os.Getenv("HOME"), "Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer")
+	var searchPaths []string
+	var apkanalyzerPath string
 
-	// Check if apkanalyzer exists
-	if _, err := os.Stat(apkanalyzerPath); os.IsNotExist(err) {
-		return manifest, fmt.Errorf("apkanalyzer not found at %s", apkanalyzerPath)
+	if sdkRoot := os.Getenv("ANDROID_SDK_ROOT"); sdkRoot != "" {
+		candidate := filepath.Join(sdkRoot, "cmdline-tools/latest/bin/apkanalyzer")
+		searchPaths = append(searchPaths, candidate)
+		if _, err := os.Stat(candidate); err == nil {
+			apkanalyzerPath = candidate
+		}
+	}
+
+	if apkanalyzerPath == "" {
+		if androidHome := os.Getenv("ANDROID_HOME"); androidHome != "" {
+			candidate := filepath.Join(androidHome, "cmdline-tools/latest/bin/apkanalyzer")
+			searchPaths = append(searchPaths, candidate)
+			if _, err := os.Stat(candidate); err == nil {
+				apkanalyzerPath = candidate
+			}
+		}
+	}
+
+	if apkanalyzerPath == "" {
+		candidate := filepath.Join(os.Getenv("HOME"), "Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer")
+		searchPaths = append(searchPaths, candidate)
+		if _, err := os.Stat(candidate); err == nil {
+			apkanalyzerPath = candidate
+		}
+	}
+
+	if apkanalyzerPath == "" {
+		return manifest, fmt.Errorf("apkanalyzer not found. searched: %s", strings.Join(searchPaths, ", "))
 	}
 
 	// Prepare the command to extract AndroidManifest.xml
