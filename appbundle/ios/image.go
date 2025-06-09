@@ -11,14 +11,6 @@ import (
 	"strings"
 )
 
-// convertToHEICFunc is used to convert an image to HEIC format.
-// It can be overridden in tests.
-var convertToHEICFunc = convertToHEIC
-
-// extractCarAssetFunc is used to extract a rendition from a .car file.
-// It can be overridden in tests.
-var extractCarAssetFunc = extractCarAsset
-
 // AnalyzeImages walks the provided bundle directory, converts supported images
 // to HEIC format and reports potential savings.
 // AnalyzeImages walks the provided bundle directory and the parsed .car files,
@@ -37,7 +29,7 @@ func AnalyzeImages(bundleDir string, carFiles []coreios.CarFileInfo) ([]core.Ove
 		lowerPath := strings.ToLower(path)
 		ext := filepath.Ext(lowerPath)
 		if ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" {
-			originalSize, convertedSize, err := convertToHEICFunc(path)
+			originalSize, convertedSize, err := convertToHEIC(path)
 			if err != nil {
 				return err
 			}
@@ -65,11 +57,11 @@ func AnalyzeImages(bundleDir string, carFiles []coreios.CarFileInfo) ([]core.Ove
 		carPath := filepath.Join(bundleDir, car.Path)
 		for _, asset := range car.Assets {
 			for _, rendition := range asset.RenditionInfo {
-				extracted, err := extractCarAssetFunc(carPath, rendition.RenditionName)
+				extracted, err := extractCarAsset(carPath, rendition.RenditionName)
 				if err != nil {
 					continue
 				}
-				origSize, convSize, err := convertToHEICFunc(extracted)
+				origSize, convSize, err := convertToHEIC(extracted)
 				os.RemoveAll(filepath.Dir(extracted))
 				if err != nil {
 					continue
@@ -91,28 +83,23 @@ func AnalyzeImages(bundleDir string, carFiles []coreios.CarFileInfo) ([]core.Ove
 	return oversizedImages, nil
 }
 
-// convertToHEIC converts the given image to HEIC format using either `sips` or
-// `heif-convert` tools and returns the original and converted file sizes.
+// convertToHEIC converts the given image to HEIC format using `sips`
+// and returns the original and converted file sizes.
 func convertToHEIC(imagePath string) (int64, int64, error) {
-	sipsPath, errSips := exec.LookPath("sips")
-	heifPath, errHeif := exec.LookPath("heif-convert")
-	if errSips != nil && errHeif != nil {
-		return 0, 0, fmt.Errorf("neither sips nor heif-convert found: please install one of them to analyze images")
+	sipsPath, err := exec.LookPath("sips")
+	if err != nil {
+		return 0, 0, fmt.Errorf("sips not found")
 	}
 
-	tmpDir, err := os.MkdirTemp("", "heic-conversion")
+	tmpDir, err := os.MkdirTemp("", "*")
 	if err != nil {
 		return 0, 0, err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	tmpFile := filepath.Join(tmpDir, "converted.heic")
-	var cmd *exec.Cmd
-	if errSips == nil {
-		cmd = exec.Command(sipsPath, "-s", "format", "heic", imagePath, "--out", tmpFile)
-	} else {
-		cmd = exec.Command(heifPath, imagePath, tmpFile)
-	}
+
+	cmd := exec.Command(sipsPath, "-s", "format", "heic", imagePath, "--out", tmpFile)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return 0, 0, fmt.Errorf("conversion failed: %v\nOutput: %s", err, string(output))
@@ -137,15 +124,15 @@ func extractCarAsset(carPath, rendition string) (string, error) {
 		return "", fmt.Errorf("assetutil not found: this tool requires macOS")
 	}
 
-	tmpDir, err := os.MkdirTemp("", "car-asset")
+	tmpDir, err := os.MkdirTemp("", "*")
 	if err != nil {
 		return "", err
 	}
+
 	tmpFile := filepath.Join(tmpDir, rendition+".png")
 	cmd := exec.Command("assetutil", "--extract", rendition, "--output", tmpFile, carPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		os.RemoveAll(tmpDir)
 		return "", fmt.Errorf("failed to extract asset: %v\nOutput: %s", err, string(output))
 	}
 	return tmpFile, nil
