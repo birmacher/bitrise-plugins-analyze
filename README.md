@@ -104,6 +104,10 @@ bitrise :diff old.json new.json --json=diff.json
 - Bitrise CLI installed
 - For analyzing .ipa files: ability to extract and process iOS app bundles
 - For analyzing Android images: the `cwebp` command must be installed
+- For HEIC optimization of iOS images: macOS is required with either `sips` or
+  `heif-convert` installed
+- For optimizing images within asset catalogs: the `assetutil` command must be
+  available on macOS
 
 ### Environment Variables
 
