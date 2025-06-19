@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 // AssetsutilCatalog represents the JSON structure returned by assetutil
@@ -49,7 +48,8 @@ func ParseCARFile(path string, basePath string) (*ios.CarFileInfo, error) {
 		}
 
 		// Skip renditions with empty names or system-generated packed assets
-		if catalog.Name == "" || strings.HasPrefix(catalog.Name, "ZZZZPackedAsset-") {
+		// if catalog.Name == "" || strings.HasPrefix(catalog.Name, "ZZZZPackedAsset-") {
+		if catalog.Name == "" {
 			continue
 		}
 
@@ -68,7 +68,8 @@ func ParseCARFile(path string, basePath string) (*ios.CarFileInfo, error) {
 		}
 
 		// Skip renditions with empty names or system-generated packed assets
-		if catalog.RenditionName == "" || strings.HasPrefix(catalog.RenditionName, "ZZZZPackedAsset-") {
+		// if catalog.RenditionName == "" || strings.HasPrefix(catalog.RenditionName, "ZZZZPackedAsset-") {
+		if catalog.RenditionName == "" {
 			continue
 		}
 

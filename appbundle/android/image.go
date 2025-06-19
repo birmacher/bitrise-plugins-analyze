@@ -117,7 +117,7 @@ func hasTransparency(filePath string) (bool, error) {
 
 	img, err := png.Decode(file)
 	if err != nil {
-		return false, fmt.Errorf("not a PNG or failed to decode: %v", err)
+		return false, fmt.Errorf("%s not a PNG or failed to decode: %v", filePath, err)
 	}
 
 	bounds := img.Bounds()

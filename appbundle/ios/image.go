@@ -61,17 +61,18 @@ func AnalyzeImages(bundleDir string, carFiles []coreios.CarFileInfo) ([]core.Ove
 				if err != nil {
 					continue
 				}
-				origSize, convSize, err := convertToHEIC(extracted)
+				_, convSize, err := convertToHEIC(extracted)
+
 				os.RemoveAll(filepath.Dir(extracted))
 				if err != nil {
 					continue
 				}
-				if convSize < origSize {
+				if convSize < rendition.Size {
 					rel := fmt.Sprintf("%s:%s", car.Path, rendition.RenditionName)
 					oversizedImages = append(oversizedImages, core.OversizedImage{
 						RelativePath: rel,
-						OriginalSize: origSize,
-						Saving:       origSize - convSize,
+						OriginalSize: rendition.Size,
+						Saving:       rendition.Size - convSize,
 						ConvertedTo:  "heic",
 					})
 				}

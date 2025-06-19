@@ -108,6 +108,10 @@ func getFileType(relativePath string, info os.FileInfo) string {
 		return core.FileTypeMetadata
 	}
 
+	if strings.Contains(relativePath, "Info.plist") {
+		return core.FileTypeMetadata
+	}
+
 	switch ext {
 	// Fonts
 	case ".otf", ".ttc", ".ttf", ".woff":
