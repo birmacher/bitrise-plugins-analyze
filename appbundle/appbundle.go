@@ -141,6 +141,13 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 		return fmt.Errorf("failed to walk bundle directory: %v", err)
 	}
 
+	// Analyze images including assets from .car files
+	oversizedImages, err := ios.AnalyzeImages(bundlePath, bundle.CarFiles)
+	if err != nil {
+		return err
+	}
+	bundle.OversizedImages = oversizedImages
+
 	return nil
 }
 
