@@ -7,13 +7,16 @@ import (
 	"bitrise-plugins-analyze/appbundle/ios"
 	"bitrise-plugins-analyze/appbundle/python"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	progressbar "github.com/schollz/progressbar/v3"
 )
 
-func Analyze(bundle_path string) (*core.AppBundle, error) {
+func Analyze(bundle_path string, progressWriter io.Writer) (*core.AppBundle, error) {
 	ext := strings.ToLower(filepath.Ext(bundle_path))
 
 	var err error
@@ -36,25 +39,45 @@ func Analyze(bundle_path string) (*core.AppBundle, error) {
 	if err != nil {
 		return nil, err
 	}
-	return analyzeAppBundle(tmp_path)
+
+	fileCount, err := countFiles(tmp_path)
+	if err != nil {
+		return nil, err
+	}
+
+	var bar *progressbar.ProgressBar
+	if progressWriter != nil {
+		bar = progressbar.NewOptions(fileCount,
+			progressbar.OptionSetWriter(progressWriter),
+			progressbar.OptionShowCount(),
+			progressbar.OptionClearOnFinish(),
+			progressbar.OptionSetDescription("Analyzing"),
+		)
+	}
+
+	bundle, err := analyzeAppBundle(tmp_path, bar)
+	if bar != nil {
+		bar.Finish()
+	}
+	return bundle, err
 }
 
 // AnalyzeAppBundle analyzes the provided app bundle directory and returns the analysis results
-func analyzeAppBundle(bundlePath string) (*core.AppBundle, error) {
+func analyzeAppBundle(bundlePath string, bar *progressbar.ProgressBar) (*core.AppBundle, error) {
 	bundle := &core.AppBundle{}
 	var err error
 
 	ext := strings.ToLower(filepath.Ext(bundlePath))
 	switch ext {
 	case core.AppExtension:
-		err = analyzeiOSApp(bundlePath, bundle)
+		err = analyzeiOSApp(bundlePath, bundle, bar)
 	case core.ApkExtension:
-		err = analyzeAndroidApp(bundlePath, bundle)
+		err = analyzeAndroidApp(bundlePath, bundle, bar)
 	}
 	return bundle, err
 }
 
-func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
+func analyzeiOSApp(bundlePath string, bundle *core.AppBundle, bar *progressbar.ProgressBar) error {
 	files, err := AnalyzeFile(bundlePath, bundlePath)
 	if err != nil {
 		return err
@@ -96,6 +119,10 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 
 		if info.IsDir() {
 			return nil
+		}
+
+		if bar != nil {
+			bar.Add(1)
 		}
 
 		switch filepath.Ext(strings.ToLower(path)) {
@@ -144,7 +171,7 @@ func analyzeiOSApp(bundlePath string, bundle *core.AppBundle) error {
 	return nil
 }
 
-func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
+func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle, bar *progressbar.ProgressBar) error {
 	// Analyze AndroidManifest.xml
 	manifest, err := android.ParseAndroidManifest(bundlePath)
 	if err != nil {
@@ -187,6 +214,10 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 
 		if info.IsDir() {
 			return nil
+		}
+
+		if bar != nil {
+			bar.Add(1)
 		}
 
 		switch filepath.Ext(strings.ToLower(path)) {
@@ -256,4 +287,18 @@ func analyzeAndroidApp(bundlePath string, bundle *core.AppBundle) error {
 	bundle.DownloadSize = apkInfo.Size()
 
 	return nil
+}
+
+func countFiles(root string) (int, error) {
+	count := 0
+	err := filepath.Walk(root, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			count++
+		}
+		return nil
+	})
+	return count, err
 }

@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/term"
+
 	"github.com/spf13/cobra"
 )
 
@@ -48,7 +50,12 @@ var analyzeCmd = &cobra.Command{
 			return errors.New("app_path is empty")
 		}
 
-		bundle, err := appbundle.Analyze(app_path)
+		var progressWriter io.Writer
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			progressWriter = os.Stdout
+		}
+
+		bundle, err := appbundle.Analyze(app_path, progressWriter)
 		if err != nil {
 			return err
 		}

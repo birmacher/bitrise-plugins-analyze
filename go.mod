@@ -3,8 +3,10 @@ module bitrise-plugins-analyze
 go 1.21
 
 require (
-	github.com/spf13/cobra v1.9.1
-	howett.net/plist v1.0.1
+        github.com/spf13/cobra v1.9.1
+        howett.net/plist v1.0.1
+       github.com/schollz/progressbar/v3 v3.13.0
+       golang.org/x/term v0.15.0
 )
 
 require (
